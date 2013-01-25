@@ -1,0 +1,13 @@
+shutdown:
+  interval: 20
+  times:
+    - 0100;1200
+backup:
+  interval: 20
+  password: 
+  skipworld:
+    - world_nether
+    - world_the_end
+webpost:
+  password: 
+  url: 
