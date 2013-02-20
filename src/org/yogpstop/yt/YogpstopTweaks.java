@@ -10,7 +10,7 @@ public class YogpstopTweaks extends JavaPlugin {
 	public static YogpstopTweaks plugin;
 	private static final EventListener el = new EventListener();
 
-	private void init() {
+	private final void init() {
 		logger = getLogger();
 		plugin = this;
 		plugin.getConfig().options().copyDefaults(true);
@@ -27,6 +27,7 @@ public class YogpstopTweaks extends JavaPlugin {
 		WebPost.loadConfiguration(getConfig());
 		Home.loadConfiguration(getDataFolder());
 		IPProtect.loadConfiguration(getDataFolder());
+		AdvancedShutdown.onEnable();
 		WebPost.onEnable();
 		Bukkit.getPluginManager().registerEvents(el, plugin);
 	}

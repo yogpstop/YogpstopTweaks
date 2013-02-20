@@ -14,26 +14,24 @@ final class WebPost {
 	private static String pw;
 	private static URL url;
 
-	static void loadConfiguration(FileConfiguration f) {
+	static final void loadConfiguration(FileConfiguration f) {
 		pw = f.getString("webpost.password");
-		URL c = null;
 		try {
-			c = new URL(f.getString("webpost.url"));
+			url = new URL(f.getString("webpost.url"));
 		} catch (MalformedURLException e) {
 			e.printStackTrace();
 		}
-		url = c;
 	}
 
-	static void onEnable() {
+	static final void onEnable() {
 		main(true);
 	}
 
-	static void onDisable() {
+	static final void onDisable() {
 		main(false);
 	}
 
-	private static void main(boolean enable) {
+	private static final void main(boolean enable) {
 		{
 			try {
 				HttpURLConnection http = (HttpURLConnection) url

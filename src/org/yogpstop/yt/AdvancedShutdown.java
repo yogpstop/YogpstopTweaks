@@ -11,17 +11,21 @@ import org.bukkit.configuration.file.FileConfiguration;
 
 final class AdvancedShutdown {
 	private static int timer = -1;
-	private static ArrayList<TimeScope> times;
-	private static final Calendar c = Calendar.getInstance();
 	private static long interval;
+	private static final ArrayList<TimeScope> times = new ArrayList<TimeScope>();
+	private static final Calendar c = Calendar.getInstance();
 
-	static void loadConfiguration(FileConfiguration f) {
+	static final void onEnable() {
+		quit();
+	}
+
+	static final void loadConfiguration(FileConfiguration f) {
 		interval = f.getInt("shutdown.interval") * 60 * 20;
 		List<String> s = f.getStringList("shutdown.times");
 		for (String a : s) {
 			a = a.trim();
 			if (a.matches("([01][0-9]|2[0-3])[0-5][0-9];([01][0-9]|[2][0-3])[0-5][0-9]")) {
-				times = new ArrayList<TimeScope>();
+				times.clear();
 				times.add(new TimeScope(Byte.parseByte(a.substring(0, 2)), Byte
 						.parseByte(a.substring(2, 4)), Byte.parseByte(a
 						.substring(5, 7)), Byte.parseByte(a.substring(7, 9))));
@@ -32,7 +36,7 @@ final class AdvancedShutdown {
 		}
 	}
 
-	static void join() {
+	static final void join() {
 		if (timer != -1) {
 			Bukkit.getScheduler().cancelTask(timer);
 			timer = -1;
@@ -40,7 +44,7 @@ final class AdvancedShutdown {
 		}
 	}
 
-	static void quit() {
+	static final void quit() {
 		if (Bukkit.getServer().getOnlinePlayers().length <= 1 && timer == -1) {
 			c.setTimeInMillis(System.currentTimeMillis());
 			for (TimeScope t : times) {
@@ -76,17 +80,19 @@ final class AdvancedShutdown {
 		}
 	};
 
-	private static class TimeScope {
-		private short from, to;
+	private static final class TimeScope {
+		private final short from, to;
 
 		public TimeScope(byte from_h, byte from_m, byte to_h, byte to_m) {
 			from = (short) (from_h * 60 + from_m);
-			to = (short) (to_h * 60 + to_m);
-			if (from > to)
-				to += 1440;
+			short cache = (short) (to_h * 60 + to_m);
+			if (from > cache)
+				to = (short) (cache + 1440);
+			else
+				to = cache;
 		}
 
-		public boolean contains(Calendar c) {
+		public final boolean contains(Calendar c) {
 			short time = (short) (c.get(Calendar.HOUR_OF_DAY) * 60 + c
 					.get(Calendar.MINUTE));
 			if (from > time)
@@ -96,7 +102,7 @@ final class AdvancedShutdown {
 			return false;
 		}
 
-		public long diff(Calendar c) {
+		public final long diff(Calendar c) {
 			short now = (short) (c.get(Calendar.HOUR_OF_DAY) * 60 + c
 					.get(Calendar.MINUTE));
 			short diff = (short) (from - now);

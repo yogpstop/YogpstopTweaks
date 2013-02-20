@@ -21,11 +21,11 @@ import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 
 final class JpConv {
-	private static List<String> ignore;
-	private static HashMap<String, Byte> type;
+	private static final List<String> ignore = new ArrayList<String>();
+	private static final HashMap<String, Byte> type = new HashMap<String, Byte>();
 	private static final HashMap<String, ArrayList<ArrayList<String>>> clist = new HashMap<String, ArrayList<ArrayList<String>>>();
 
-	private static String getList(String name) {
+	private static final String getList(String name) {
 		StringBuilder info = new StringBuilder();
 		StringBuilder ex = new StringBuilder();
 		info.append("変換候補\n");
@@ -49,7 +49,7 @@ final class JpConv {
 		return info.toString();
 	}
 
-	private static String getChat(String name, String[] cand) {
+	private static final String getChat(String name, String[] cand) {
 		StringBuilder output = new StringBuilder();
 		if (cand.length != clist.get(name).size()) {
 			HashMap<Integer, Integer> special = new HashMap<Integer, Integer>();
@@ -75,9 +75,9 @@ final class JpConv {
 		return output.toString();
 	}
 
-	static void loadConfiguration(File dir) {
-		type = new HashMap<String, Byte>();
-		ignore = new ArrayList<String>();
+	static final void loadConfiguration(File dir) {
+		type.clear();
+		ignore.clear();
 		if (!dir.exists()) {
 			dir.mkdir();
 		}
@@ -118,7 +118,7 @@ final class JpConv {
 		}
 	}
 
-	static void saveConfiguration(File dir) {
+	static final void saveConfiguration(File dir) {
 		File config = new File(dir, "jp_player");
 		try {
 			BufferedWriter bw = new BufferedWriter(new FileWriter(config));
@@ -135,12 +135,12 @@ final class JpConv {
 		}
 	}
 
-	static void join(String player) {
+	static final void join(String player) {
 		if (!type.containsKey(player))
 			type.put(player, (byte) 0);
 	}
 
-	static String chat(String chat, Player p) {
+	static final String chat(String chat, Player p) {
 		if (chat.getBytes().length != chat.length())
 			return chat;
 		switch (type.get(p.getName())) {
@@ -162,7 +162,7 @@ final class JpConv {
 
 	}
 
-	static boolean command(String cmd, String[] args, Player p) {
+	static final boolean command(String cmd, String[] args, Player p) {
 		if (cmd.equals(".") && clist.containsKey(p.getName())) {
 			p.chat(getChat(p.getName(), args));
 			return true;
@@ -203,7 +203,7 @@ final class JpConv {
 		return false;
 	}
 
-	private static String processClause(String text) {
+	private static final String processClause(String text) {
 		text = text.trim().toLowerCase();
 		StringBuilder sb = new StringBuilder();
 		Matcher m = Pattern.compile(
@@ -218,7 +218,7 @@ final class JpConv {
 				else
 					sb.append(romaToHira(c));
 			}
-			sb.append(data.symbol(m.group()));
+			sb.append(Database.symbol(m.group()));
 			back = m.end();
 		}
 		if (back < text.length()) {
@@ -231,7 +231,7 @@ final class JpConv {
 		return sb.toString();
 	}
 
-	private static ArrayList<ArrayList<String>> webConv(String text) {
+	private static final ArrayList<ArrayList<String>> webConv(String text) {
 		StringBuilder line = new StringBuilder();
 		try {
 			URL url = new URL(
@@ -280,7 +280,7 @@ final class JpConv {
 		return cache;
 	}
 
-	private static String romaToHira(String s) {
+	private static final String romaToHira(String s) {
 		StringBuilder sb = new StringBuilder();
 		char[] siin = new char[2];
 		char[] o_siin = new char[2];
@@ -308,7 +308,7 @@ final class JpConv {
 				lowerCase = true;
 			} else {
 				if (c == 'a' || c == 'i' || c == 'u' || c == 'e' || c == 'o') {
-					sb.append(data.get(
+					sb.append(Database.get(
 							(siin[0] == 0 ? "" : Character.toString(siin[0]))
 									+ (siin[1] == 0 ? "" : Character
 											.toString(siin[1])), c, lowerCase));
@@ -366,15 +366,13 @@ final class JpConv {
 		return sb.toString();
 	}
 
-	private static final Database data = new Database();
-
 	private static final class Database {
-		private final HashMap<String, String[]> siin = new HashMap<String, String[]>();
-		private final HashMap<Character, Integer> boin = new HashMap<Character, Integer>();
-		private final HashMap<Character, Character> lower = new HashMap<Character, Character>();
-		private final HashMap<String, String> symbol = new HashMap<String, String>();
+		private static final HashMap<String, String[]> siin = new HashMap<String, String[]>();
+		private static final HashMap<Character, Integer> boin = new HashMap<Character, Integer>();
+		private static final HashMap<Character, Character> lower = new HashMap<Character, Character>();
+		private static final HashMap<String, String> symbol = new HashMap<String, String>();
 
-		private Database() {
+		static {
 			put("", "あ", "い", "う", "え", "お");
 			put("k", "か", "き", "く", "け", "こ");
 			put("s", "さ", "し", "す", "せ", "そ");
@@ -459,8 +457,8 @@ final class JpConv {
 			symbol.put("-", "ー");
 		}
 
-		private void put(String r, String h1, String h2, String h3, String h4,
-				String h5) {
+		private static final void put(String r, String h1, String h2,
+				String h3, String h4, String h5) {
 			String[] caches = new String[5];
 			caches[0] = h1;
 			caches[1] = h2;
@@ -470,7 +468,8 @@ final class JpConv {
 			siin.put(r, caches);
 		}
 
-		private String get(String r, Character aboin, boolean isLower) {
+		private static final String get(String r, Character aboin,
+				boolean isLower) {
 			String cache = (siin.get(r) == null ? null : siin.get(r)[boin
 					.get(aboin)]);
 			if (cache == null) {
@@ -483,7 +482,7 @@ final class JpConv {
 			return cache;
 		}
 
-		private String symbol(String s) {
+		private static final String symbol(String s) {
 			return (symbol.get(s) == null ? s : symbol.get(s));
 		}
 	}

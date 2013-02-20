@@ -15,10 +15,10 @@ import org.bukkit.World;
 import org.bukkit.entity.Player;
 
 final class Home {
-	private static HashMap<String, Location> list;
+	private static final HashMap<String, Location> list = new HashMap<String, Location>();
 
-	static void loadConfiguration(File dir) {
-		list = new HashMap<String, Location>();
+	static final void loadConfiguration(File dir) {
+		list.clear();
 		File config = new File(dir, "home_player");
 		if (config.exists()) {
 			try {
@@ -32,13 +32,12 @@ final class Home {
 					String[] l = s[1].split(",");
 					HashMap<String, String> map = new HashMap<String, String>();
 					for (String st : l) {
-
-						String[] a = st.split("=");
-						if (a.length != 2)
-							continue;
-						map.put(a[0], a[1]);
+						map.put(st.substring(0, st.indexOf("=")),
+								st.substring(st.indexOf("=") + 1));
 					}
-					World world = Bukkit.getWorld(map.get("world"));
+					World world = Bukkit.getWorld(map.get("world").substring(
+							map.get("world").indexOf("{name=") + 6,
+							map.get("world").length() - 1));
 					if (world == null)
 						world = Bukkit.getWorlds().get(0);
 					list.put(
@@ -57,7 +56,7 @@ final class Home {
 		}
 	}
 
-	static void saveConfiguration(File dir) {
+	static final void saveConfiguration(File dir) {
 		File config = new File(dir, "home_player");
 		try {
 			BufferedWriter bw = new BufferedWriter(new FileWriter(config));
@@ -74,7 +73,7 @@ final class Home {
 		}
 	}
 
-	static boolean command(String command, String[] args, Player p) {
+	static final boolean command(String command, String[] args, Player p) {
 		if (command.equals("home")) {
 			if (list.containsKey(p.getName()))
 				p.teleport(list.get(p.getName()));

@@ -8,9 +8,9 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
 public class Afk {
-	private static HashMap<String, String> list = new HashMap<String, String>();;
+	private static final HashMap<String, String> list = new HashMap<String, String>();;
 
-	static boolean command(String command, String[] args, Player p) {
+	static final boolean command(String command, String[] args, Player p) {
 		if (command.equals("afk")) {
 			if (list.containsKey(p.getName())) {
 				list.remove(p.getName());
@@ -42,7 +42,7 @@ public class Afk {
 		return false;
 	}
 
-	static boolean command(String command, String[] args, CommandSender cs) {
+	static final boolean command(String command, String[] args, CommandSender cs) {
 		if (command.equals("cafk")) {
 			if (args.length != 1)
 				return false;
@@ -63,7 +63,7 @@ public class Afk {
 		return false;
 	}
 
-	static void quit(String player) {
+	static final void quit(String player) {
 		list.remove(player);
 	}
 }

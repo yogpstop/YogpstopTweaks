@@ -25,18 +25,18 @@ import de.idyl.winzipaes.impl.AESEncrypter;
 import de.idyl.winzipaes.impl.AESEncrypterJCA;
 
 final class EncryptionBackup {
-	private static HashMap<File, Long> todir;
-	private static ArrayList<String> skipWorld;
+	private static final HashMap<File, Long> todir = new HashMap<File, Long>();
+	private static final ArrayList<String> skipWorld = new ArrayList<String>();
 	private static String pass;
 	private static long interval;
 
-	static void loadConfiguration(File dir, FileConfiguration fc) {
-		skipWorld = new ArrayList<String>();
+	static final void loadConfiguration(File dir, FileConfiguration fc) {
+		skipWorld.clear();
 		interval = fc.getInt("backup.interval") * 60 * 20;
 		pass = fc.getString("backup.password");
 		skipWorld.addAll(fc.getStringList("backup.skipworld"));
 		try {
-			todir = new HashMap<File, Long>();
+			todir.clear();
 			File f = new File(dir, "backup.cfg");
 			if (!f.exists())
 				f.createNewFile();
@@ -57,7 +57,7 @@ final class EncryptionBackup {
 
 	private static int taskID = -1;
 
-	static void join() {
+	static final void join() {
 		if (taskID == -1) {
 			taskID = Bukkit.getScheduler().scheduleSyncDelayedTask(
 					YogpstopTweaks.plugin, backup, interval);
@@ -65,7 +65,7 @@ final class EncryptionBackup {
 		}
 	}
 
-	static boolean command(String cmd, String[] args, CommandSender cs) {
+	static final boolean command(String cmd, String[] args, CommandSender cs) {
 		if (cmd.equals("backup")) {
 			backup.run();
 			return true;
@@ -73,7 +73,7 @@ final class EncryptionBackup {
 		return false;
 	}
 
-	private static void saveall_off() {
+	private static final void saveall_off() {
 		Bukkit.savePlayers();
 		for (World world : Bukkit.getWorlds()) {
 			world.save();
@@ -81,7 +81,7 @@ final class EncryptionBackup {
 		}
 	}
 
-	private static void zipDir(File directory, File zip) {
+	private static final void zipDir(File directory, File zip) {
 		try {
 			AESEncrypter aese = new AESEncrypterJCA();
 			aese.init(pass, 256);
@@ -93,7 +93,7 @@ final class EncryptionBackup {
 		}
 	}
 
-	private static void zipDir(File zipDir, AesZipFileEncrypter azfe,
+	private static final void zipDir(File zipDir, AesZipFileEncrypter azfe,
 			String path) throws IOException {
 		String[] dirList = zipDir.list();
 		for (int i = 0; i < dirList.length; ++i) {
@@ -107,7 +107,8 @@ final class EncryptionBackup {
 
 	}
 
-	private static void copyDirectory(File src, File dest) throws IOException {
+	private static final void copyDirectory(File src, File dest)
+			throws IOException {
 		if (src.isFile())
 			copyFile(src, dest);
 		if (!dest.exists())
@@ -122,7 +123,7 @@ final class EncryptionBackup {
 		}
 	}
 
-	static private void delete(File f) {
+	static private final void delete(File f) {
 		if (f.exists() == false) {
 			return;
 		}
@@ -140,7 +141,7 @@ final class EncryptionBackup {
 		}
 	}
 
-	private static File encryption(ArrayList<File> file) {
+	private static final File encryption(ArrayList<File> file) {
 		File dir = new File("backups");
 		dir.mkdir();
 		try {
@@ -160,7 +161,7 @@ final class EncryptionBackup {
 		return time;
 	}
 
-	private static File copyFiles(File file) {
+	private static final File copyFiles(File file) {
 		long size = 0;
 		size += getSize(file);
 		for (File cache : todir.keySet()) {
@@ -175,7 +176,7 @@ final class EncryptionBackup {
 		return file;
 	}
 
-	private static void copyFile(File from, File to) {
+	private static final void copyFile(File from, File to) {
 		try {
 			FileInputStream srcIS = new FileInputStream(from);
 			FileChannel srcChannel = srcIS.getChannel();
@@ -191,7 +192,7 @@ final class EncryptionBackup {
 		}
 	}
 
-	private static void deleteOver(File file, long over) {
+	private static final void deleteOver(File file, long over) {
 		long total = 0;
 		ArrayList<File> deletelist = new ArrayList<File>();
 		ArrayList<File> cache = getSortedFiles(file);
@@ -206,7 +207,7 @@ final class EncryptionBackup {
 		}
 	}
 
-	private static long getSize(File file) {
+	private static final long getSize(File file) {
 		long size = 0;
 		if (file.isDirectory()) {
 			File files[] = file.listFiles();
@@ -221,7 +222,7 @@ final class EncryptionBackup {
 		return size;
 	}
 
-	private static ArrayList<File> getSortedFiles(File file) {
+	private static final ArrayList<File> getSortedFiles(File file) {
 		ArrayList<File> files = new ArrayList<File>();
 		if (file.isDirectory()) {
 			File[] filesc = file.listFiles();
@@ -235,7 +236,7 @@ final class EncryptionBackup {
 		return files;
 	}
 
-	private static ArrayList<File> getFileList() {
+	private static final ArrayList<File> getFileList() {
 		ArrayList<File> result = new ArrayList<File>();
 		for (World w : Bukkit.getWorlds()) {
 			if (!skipWorld.contains(w.getName().toLowerCase()))

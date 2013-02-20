@@ -12,11 +12,11 @@ import java.util.HashMap;
 import org.bukkit.Bukkit;
 
 public class IPProtect {
-	private static HashMap<Long, Byte> allow4 = new HashMap<Long, Byte>();
+	private static final HashMap<Long, Byte> allow4 = new HashMap<Long, Byte>();
 
 	// private static HashMap<Long, Byte> allow6 = new HashMap<Long, Byte>();
 
-	static String prelogin(InetAddress a, String p) {
+	static final String prelogin(InetAddress a, String p) {
 		if (a instanceof Inet4Address) {
 			byte[] base = a.getAddress();
 			long y = base[3];
@@ -38,10 +38,10 @@ public class IPProtect {
 		return "Your IP is unknown.";
 	}
 
-	static void loadConfiguration(File dir) {
+	static final void loadConfiguration(File dir) {
 		byte x;
 		long a;
-		allow4 = new HashMap<Long, Byte>();
+		allow4.clear();
 		File f = new File(dir, "ips.cfg");
 		if (!f.exists())
 			return;
@@ -62,8 +62,8 @@ public class IPProtect {
 				a += Long.parseLong(four[0]) << 24;
 				a = a >> x;
 				allow4.put(a, x);
-				br.close();
 			}
+			br.close();
 		} catch (NumberFormatException | IOException e) {
 			e.printStackTrace();
 		}

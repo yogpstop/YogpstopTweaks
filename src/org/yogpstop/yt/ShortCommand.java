@@ -15,11 +15,11 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
 final class ShortCommand {
-	private static HashMap<String, ArrayList<String>> commands;
+	private static final HashMap<String, ArrayList<String>> commands = new HashMap<String, ArrayList<String>>();
 
-	static void loadConfiguration(File dir) {
+	static final void loadConfiguration(File dir) {
 		try {
-			commands = new HashMap<String, ArrayList<String>>();
+			commands.clear();
 			File f = new File(dir, "commands.yml");
 			if (!f.exists())
 				f.createNewFile();
@@ -46,7 +46,7 @@ final class ShortCommand {
 		}
 	}
 
-	static boolean command(String cmd, String[] args, Player p) {
+	static final boolean command(String cmd, String[] args, Player p) {
 		if (commands.containsKey(cmd)) {
 			for (String s : commands.get(cmd)) {
 				p.chat("/".concat(replace(s, args, p)));
@@ -56,7 +56,7 @@ final class ShortCommand {
 		return false;
 	}
 
-	static boolean command(String cmd, String[] args, CommandSender cs) {
+	static final boolean command(String cmd, String[] args, CommandSender cs) {
 		if (commands.containsKey(cmd)) {
 			for (String s : commands.get(cmd)) {
 				Bukkit.dispatchCommand(cs, replace(s, args, cs));
@@ -66,7 +66,8 @@ final class ShortCommand {
 		return false;
 	}
 
-	private static String replace(String cmd, String[] args, CommandSender cs) {
+	private final static String replace(String cmd, String[] args,
+			CommandSender cs) {
 		cmd = cmd.replaceAll("@PLAYER@", cs.getName());
 		StringBuilder argsall = new StringBuilder();
 		for (String s : args) {
