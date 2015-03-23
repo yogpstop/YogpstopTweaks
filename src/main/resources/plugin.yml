@@ -1,0 +1,16 @@
+name: YogpstopTweaks
+version: 1.0.0
+main: com.yogpc.yt.YogpstopTweaks
+permissions:
+  com.yogpc.bm.setting:
+    default: op
+commands:
+  ch: {}
+  chj: {}
+  chx: {}
+  chl: {}
+  chc: {}
+  chd: {}
+  bm:
+    permission: com.yogpc.bm.setting
+  chwgrp: {}
