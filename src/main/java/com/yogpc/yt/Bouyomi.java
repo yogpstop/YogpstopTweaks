@@ -161,23 +161,24 @@ public class Bouyomi extends Thread {
         final byte[] r = (e.p + " " + e.s).getBytes(YogpstopTweaks.utf8);
         final Socket k = new Socket();
         k.connect(a);
+        // Little endian
         final OutputStream o = k.getOutputStream();
         o.write(0x01);// command
         o.write(0x00);
         o.write(0xFF);// speed
         o.write(0xFF);
-        o.write(s.tone >>> 8 & 0xFF);// tone
-        o.write(s.tone >>> 0 & 0xFF);
+        o.write(s.tone);// tone
+        o.write(s.tone >> 8);
         o.write(0xFF);// volume
         o.write(0xFF);
-        o.write(s.type >>> 8 & 0xFF);// type
-        o.write(s.type >>> 0 & 0xFF);
+        o.write(s.type);// type
+        o.write(s.type >> 8);
         o.write(0x00);// charset
-        o.write(r.length >> 24);
-        o.write(r.length >> 16);
+        o.write(r.length);// length
         o.write(r.length >> 8);
-        o.write(r.length);
-        o.write(r);
+        o.write(r.length >> 16);
+        o.write(r.length >> 24);
+        o.write(r);// message
         o.flush();
         o.close();
         k.close();
