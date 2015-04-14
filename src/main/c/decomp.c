@@ -6,6 +6,7 @@ st_decomp dec_init(char *in) {
 	st_decomp ret = malloc(sizeof(sst_decomp));
 	memset(ret, 0, sizeof(sst_decomp));
 	ret->in_file = gzopen(in ,"rb");
+	gzbuffer(ret->in_file, 1024 * 1024 * 16);//16MB buffer
 	return ret;
 }
 // must be sizeof(size_t) * 8 < UINT8_MAX
