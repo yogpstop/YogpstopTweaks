@@ -6,6 +6,7 @@ st_decomp dec_init(char *in) {
 	st_decomp ret = malloc(sizeof(sst_decomp));
 	memset(ret, 0, sizeof(sst_decomp));
 	ret->in_file = fopen(in ,"rb");
+#ifndef NSZIP
 	void *prop = malloc(LZMA_PROPS_SIZE);
 	fread(prop, 1, LZMA_PROPS_SIZE, ret->in_file);
 	LzmaDec_Construct(&ret->z_h);
@@ -14,12 +15,14 @@ st_decomp dec_init(char *in) {
 	free(prop);
 	ret->in_total = 1024 * 1024 * 16; // 16MB buffer
 	ret->in_buf = malloc(ret->in_total);
+#endif
 	return ret;
 }
 static size_t zread(void *ptr, size_t len, st_decomp obj) {
+#ifndef NSZIP
 	void *dst = ptr;
-	size_t dst_cur;
 	size_t src_cur;
+	size_t dst_cur;
 	while (ptr + len > dst && obj->z_stat != LZMA_STATUS_FINISHED_WITH_MARK) {
 		dst_cur = len - (dst - ptr);
 		src_cur = obj->in_pos;
@@ -33,22 +36,23 @@ static size_t zread(void *ptr, size_t len, st_decomp obj) {
 		dst += dst_cur;
 	}
 	return dst - ptr;
+#else
+	return fread(ptr, 1, len, obj->in_file);
+#endif
 }
 // must be sizeof(size_t) * 8 < UINT8_MAX
 static size_t read_len(st_decomp obj) {
-	uint8_t len = 0;
+	uint8_t len = 0, tmp;
 	size_t ret = 0;
-	uint8_t tmp;
 	while (!((ret >> (len * 7)) & 1)) {
 		len += zread(&tmp, 1, obj);// must return 1
 		ret = (ret << 8) | tmp;
 	}
-	ret &= ~(1 << (len * 7));
-	return ret;
+	return ret & ~(1 << (len * 7));
 }
-void dec_do(st_decomp obj) {
+int dec_do(st_decomp obj) {
 	uint8_t tmp;
-	zread(&tmp, 1, obj);// must return 1
+	if (!zread(&tmp, 1, obj)) return 0;
 	obj->type = tmp;
 	if (DT_IS(obj->type, DT_NEW)) {
 		size_t nlen = read_len(obj);
@@ -67,11 +71,14 @@ void dec_do(st_decomp obj) {
 	if (obj->out) free(obj->out);
 	obj->out = malloc(obj->len);
 	zread(obj->out, obj->len, obj);
+	return 1;
 }
 void dec_final(st_decomp obj) {
+#ifndef NSZIP
 	LzmaDec_Free(&obj->z_h, &szMem);
-	fclose(obj->in_file);
 	free(obj->in_buf);
+#endif
+	fclose(obj->in_file);
 	if (obj->out) free(obj->out);
 	if (obj->name) free(obj->name);
 	free(obj);

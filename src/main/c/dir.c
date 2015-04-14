@@ -144,7 +144,7 @@ static int get_mcr(st_raw obj) {
 		p = U8_24(obj->mcr_tmp, i) * 4096;
 		obj->ts = rU32P(obj->mcr_tmp, i + 4096);
 		if (p >= 8192) break;
-		if (DT2CP(obj->type) >= 1023) return 1;
+		if (DT2CP(obj->type) >= 1023) return 0;
 		obj->type += CP2DT(1);
 	}
 	obj->type &= ~DT_COMP;
@@ -154,14 +154,14 @@ static int get_mcr(st_raw obj) {
 				U8_32(obj->mcr_tmp, p), &obj->len);
 	else
 		obj->out = NULL; //FIXME extract gzip
-	return 0;
+	return 1;
 }
-void raw_do(st_raw obj) {
+int raw_do(st_raw obj) {
 	if (DT_IS(obj->type, DT_MCR) && DT2CP(obj->type) < 1023) {
 		obj->type += CP2DT(1);
-		if (get_mcr(obj)) raw_do(obj);
-		return;
+		return get_mcr(obj) ? 1 : raw_do(obj);
 	}
+	if (obj->epos >= obj->ecount) return 0;
 	if (obj->mcr_tmp) { free(obj->mcr_tmp); obj->mcr_tmp = NULL; }
 	if (obj->out) { free(obj->out); obj->out = NULL; }
 	obj->name = obj->entries[obj->epos].name_virt;
@@ -178,6 +178,7 @@ void raw_do(st_raw obj) {
 		obj->type |= DT_MCR;
 		obj->mcr_tmp = obj->out;
 		obj->mcr_len = obj->len;
-		if (get_mcr(obj)) raw_do(obj);
+		return get_mcr(obj) ? 1 : raw_do(obj);
 	}
+	return 1;
 }

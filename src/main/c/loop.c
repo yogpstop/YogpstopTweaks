@@ -15,14 +15,12 @@ void loop(char *dir, char *sz, char *coc, char *cop) {
 	while (prv || cur) {
 		while (cmp < 0 && prv) {
 			comp_do(op, prv->type, prv->name, prv->ts, prv->len, prv->out);
-			if (dec_done(prv)) { dec_final(prv); prv = NULL; cmp = 1; break; }
-			dec_do(prv);
+			if (!dec_do(prv)) { dec_final(prv); prv = NULL; cmp = 1; break; }
 			GENCMP;
 		}
 		while (cmp > 0 && cur) {
 			comp_do(oc, cur->type, cur->name, cur->ts, cur->len, cur->out);
-			if (raw_done(cur)) { raw_final(cur); cur = NULL; cmp = -1; break; }
-			raw_do(cur);
+			if (!raw_do(cur)) { raw_final(cur); cur = NULL; cmp = -1; break; }
 			GENCMP;
 		}
 		if (cmp || !prv || !cur) continue;
@@ -32,10 +30,8 @@ void loop(char *dir, char *sz, char *coc, char *cop) {
 				prv->len != cur->len || memcmp(prv->out, cur->out, prv->len)) {
 			comp_do(op, prv->type, prv->name, prv->ts, prv->len, prv->out);
 		}
-		if (dec_done(prv)) { dec_final(prv); prv = NULL; cmp = 1; }
-		else dec_do(prv);
-		if (raw_done(cur)) { raw_final(cur); cur = NULL; cmp = -1; }
-		else raw_do(cur);
+		if (!dec_do(prv)) { dec_final(prv); prv = NULL; cmp = 1; }
+		if (!raw_do(cur)) { raw_final(cur); cur = NULL; cmp = -1; }
 		GENCMP;
 	}
 	if (prv) dec_final(prv);

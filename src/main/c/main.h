@@ -1,21 +1,27 @@
 #include <stdio.h>
 #include <stddef.h>
 #include <stdint.h>
+#ifndef NSZIP
 #include <LzmaEnc.h>
 #include <LzmaDec.h>
+#endif
 
 #define cast_struct(str, obj, mem) ((str*)(((void*)obj) - offsetof(str, mem)))
 #define cast_comp(obj, mem) cast_struct(sst_compress, obj, mem)
 
+#ifndef NSZIP
 extern ISzAlloc szMem;
+#endif
 typedef struct {
 //PRIVATE
+#ifndef NSZIP
 	CLzmaEncHandle z_h;
 	ISeqInStream z_in;
 	ISeqOutStream z_out;
-	FILE *f_out;
+#endif
 	void *in_buf;
 	size_t in_remain;
+	FILE *f_out;
 	char *prev;
 } sst_compress, *st_compress;
 st_compress comp_init(char*);
@@ -35,12 +41,14 @@ void comp_final(st_compress);
 
 typedef struct {
 //PRIVATE
+#ifndef NSZIP
 	CLzmaDec z_h;
 	ELzmaStatus z_stat;
-	FILE *in_file;
 	void *in_buf;
 	size_t in_total;
 	size_t in_pos;
+#endif
+	FILE *in_file;
 //PUBLIC
 	uint16_t type;
 	char *name;
@@ -48,9 +56,8 @@ typedef struct {
 	size_t len;
 	void *out;
 } sst_decomp, *st_decomp;
-#define dec_done(st) ((st)->z_stat == LZMA_STATUS_FINISHED_WITH_MARK)
 st_decomp dec_init(char*);
-void dec_do(st_decomp);
+int dec_do(st_decomp);
 void dec_final(st_decomp);
 
 typedef struct {
@@ -71,11 +78,8 @@ typedef struct {
 	size_t len;
 	void *out;
 } sst_raw, *st_raw;
-#define raw_done(st) \
-		((!DT_IS((st)->type, DT_MCR) || DT2CP((st)->type) >= 1023) \
-		&& (st)->epos >= (st)->ecount)
 st_raw raw_init(char*);
-void raw_do(st_raw);
+int raw_do(st_raw);
 void raw_final(st_raw);
 
 void loop(char*, char*, char*, char*);
