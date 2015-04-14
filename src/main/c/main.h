@@ -1,27 +1,22 @@
 #include <stdio.h>
 #include <stddef.h>
 #include <stdint.h>
-#ifndef NSZIP
-#include <LzmaEnc.h>
-#include <LzmaDec.h>
+#include <zlib.h>
+
+#ifdef DEBUG
+#define dbgprintf(...) printf(__VA_ARGS__)
+#else
+#define dbgprintf(...)
 #endif
 
 #define cast_struct(str, obj, mem) ((str*)(((void*)obj) - offsetof(str, mem)))
 #define cast_comp(obj, mem) cast_struct(sst_compress, obj, mem)
 
-#ifndef NSZIP
-extern ISzAlloc szMem;
-#endif
 typedef struct {
 //PRIVATE
-#ifndef NSZIP
-	CLzmaEncHandle z_h;
-	ISeqInStream z_in;
-	ISeqOutStream z_out;
-#endif
 	void *in_buf;
 	size_t in_remain;
-	FILE *f_out;
+	gzFile f_out;
 	char *prev;
 } sst_compress, *st_compress;
 st_compress comp_init(char*);
@@ -41,14 +36,7 @@ void comp_final(st_compress);
 
 typedef struct {
 //PRIVATE
-#ifndef NSZIP
-	CLzmaDec z_h;
-	ELzmaStatus z_stat;
-	void *in_buf;
-	size_t in_total;
-	size_t in_pos;
-#endif
-	FILE *in_file;
+	gzFile in_file;
 //PUBLIC
 	uint16_t type;
 	char *name;

@@ -5,12 +5,8 @@ LDFLAGS=-s
 
 SRCS=$(wildcard *.c)
 
-ifeq ($(strip $(NSZIP)),)
-SZDIR=/c/Users/yogpstop/Downloads/lzma938/C
-SRCS+=$(addprefix $(SZDIR)/,LzmaDec.c LzmaEnc.c MtCoder.c LzFindMt.c LzFind.c Threads.c)
-CFLAGS+=-I$(SZDIR)
-else
-CFLAGS+=-DNSZIP=1
+ifneq ($(strip $(DEBUG)),)
+CFLAGS+=-DDEBUG=1
 endif
 
 OBJS=$(SRCS:%.c=%.o)

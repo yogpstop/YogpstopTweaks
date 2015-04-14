@@ -1,5 +1,4 @@
 #include <stdlib.h>
-#include <zlib.h>
 #include <windows.h>
 #include "main.h"
 
@@ -147,6 +146,7 @@ static int get_mcr(st_raw obj) {
 		if (DT2CP(obj->type) >= 1023) return 0;
 		obj->type += CP2DT(1);
 	}
+	dbgprintf("get_mcr %04X %I64d\n", i, p);
 	obj->type &= ~DT_COMP;
 	obj->type |= U8P(obj->mcr_tmp, p + 4);
 	if (DT_IS(obj->type, DT_ZLIB))
@@ -154,16 +154,21 @@ static int get_mcr(st_raw obj) {
 				U8_32(obj->mcr_tmp, p), &obj->len);
 	else
 		obj->out = NULL; //FIXME extract gzip
+	dbgprintf("GET_MCR\n");
 	return 1;
 }
 int raw_do(st_raw obj) {
+	dbgprintf("raw_do %04X %I64d %I64d %s\n", obj->type,
+			obj->epos, obj->ecount, obj->name);
 	if (DT_IS(obj->type, DT_MCR) && DT2CP(obj->type) < 1023) {
+		dbgprintf("raw_do mcr continue\n");
 		obj->type += CP2DT(1);
 		return get_mcr(obj) ? 1 : raw_do(obj);
 	}
 	if (obj->epos >= obj->ecount) return 0;
 	if (obj->mcr_tmp) { free(obj->mcr_tmp); obj->mcr_tmp = NULL; }
 	if (obj->out) { free(obj->out); obj->out = NULL; }
+	dbgprintf("raw_do new entry\n");
 	obj->name = obj->entries[obj->epos].name_virt;
 	if (is_gzip(obj->entries[obj->epos].name_real)) {
 		obj->type = DT_GZIP;
@@ -173,10 +178,12 @@ int raw_do(st_raw obj) {
 		read_raw(obj, obj->entries[obj->epos].name_real);
 	}
 	obj->epos++;
+	dbgprintf("raw_do new OK\n");
 	if ((strstr(obj->name, ".mca") || strstr(obj->name, ".mcr"))
 		&& obj->len >= 8192) {
 		obj->type |= DT_MCR;
 		obj->mcr_tmp = obj->out;
+		obj->out = NULL;
 		obj->mcr_len = obj->len;
 		return get_mcr(obj) ? 1 : raw_do(obj);
 	}
