@@ -43,6 +43,9 @@ int main(int argc, char **argv) {
 	loop(argv[1], prev, new, tmp);
 	if (prev) { remove(prev); rename(tmp, prev); }
 	else remove(tmp);
+	while (aindex--)
+		free(array[aindex]);
+	free(array);
 	free(tmp);
 	free(new);
 	free(inal);

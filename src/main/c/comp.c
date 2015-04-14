@@ -3,8 +3,8 @@
 #include "main.h"
 
 void comp_final(st_compress obj) {
-	gzclose(obj->f_out);
 	if (obj->prev) free(obj->prev);
+	gzclose(obj->f_out);
 	free(obj);
 }
 st_compress comp_init(char *out) {
@@ -33,14 +33,14 @@ void comp_do(st_compress obj, uint16_t type, char *name,
 		uint32_t ts, size_t len, void *data) {
 	dbgprintf("comp_do %04X %08X %I64d %16p %s\n", type, ts, len, data, name);
 	int sname = obj->prev && !strcmp(name, obj->prev);
-	obj->in_remain = 1 + (sname ? 0 : st_len(strlen(name)) + strlen(name))
+	size_t in_remain = 1 + (sname ? 0 : st_len(strlen(name)) + strlen(name))
 			+ (DT_IS(type, DT_MCR) ? 5 : 0) + st_len(len) + len;
-	obj->in_buf = malloc(obj->in_remain);
-	void *cur = obj->in_buf;
+	void * const in_buf = malloc(in_remain);
+	void *cur = in_buf;
 	*((uint8_t*)cur++) = (uint8_t) (type | (sname ? 0 : DT_NEW));
 	if (!sname) {
-		if (obj->prev) free(obj->prev);
 		size_t nlen = strlen(name);
+		if (obj->prev) free(obj->prev);
 		obj->prev = malloc(nlen + 1);
 		memcpy(obj->prev, name, nlen);
 		obj->prev[nlen] = 0;
@@ -55,10 +55,10 @@ void comp_do(st_compress obj, uint16_t type, char *name,
 	}
 	st_write(len, &cur);
 	memcpy(cur, data, len);
-	cur = obj->in_buf;
+	cur = in_buf;
 	size_t tmp = 0;
-	while ((tmp = gzwrite(obj->f_out, obj->in_buf, obj->in_remain))) {
-		obj->in_buf += tmp; obj->in_remain -= tmp; }
-	free(cur);
+	while ((tmp = gzwrite(obj->f_out, cur, in_remain))) {
+		cur += tmp; in_remain -= tmp; }
+	free(in_buf);
 	dbgprintf("COMP_DO\n");
 }

@@ -14,8 +14,6 @@
 
 typedef struct {
 //PRIVATE
-	void *in_buf;
-	size_t in_remain;
 	gzFile f_out;
 	char *prev;
 } sst_compress, *st_compress;

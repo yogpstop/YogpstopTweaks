@@ -9,6 +9,12 @@ st_decomp dec_init(char *in) {
 	gzbuffer(ret->in_file, 1024 * 1024 * 16);//16MB buffer
 	return ret;
 }
+void dec_final(st_decomp obj) {
+	if (obj->out) free(obj->out);
+	if (obj->name) free(obj->name);
+	gzclose(obj->in_file);
+	free(obj);
+}
 // must be sizeof(size_t) * 8 < UINT8_MAX
 static size_t read_len(st_decomp obj) {
 	uint8_t len = 0, tmp;
@@ -41,10 +47,4 @@ int dec_do(st_decomp obj) {
 	obj->out = malloc(obj->len);
 	gzread(obj->in_file, obj->out, obj->len);
 	return 1;
-}
-void dec_final(st_decomp obj) {
-	gzclose(obj->in_file);
-	if (obj->out) free(obj->out);
-	if (obj->name) free(obj->name);
-	free(obj);
 }

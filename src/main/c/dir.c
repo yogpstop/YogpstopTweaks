@@ -57,14 +57,14 @@ st_raw raw_init(char *in) {
 	return ret;
 }
 void raw_final(st_raw obj) {
+	if (obj->mcr_tmp) free(obj->mcr_tmp);
+	if (obj->out) free(obj->out);
 	st_fentry e = obj->entries + obj->ecount;
 	while (--e >= obj->entries) {
 		free(e->name_real);
 		free(e->name_virt);
 	}
 	free(obj->entries);
-	if (obj->mcr_tmp) free(obj->mcr_tmp);
-	if (obj->out) free(obj->out);
 	free(obj);
 }
 static void *ext_zlib(void *src, size_t srcl, size_t *dstl) {
