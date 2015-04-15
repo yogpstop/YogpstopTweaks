@@ -1,19 +1,12 @@
 package com.yogpc.yt.bu;
 
-import java.io.File;
-
-import org.bukkit.plugin.Plugin;
-
-public class Looping extends Thread {
+public final class Looping extends Thread {
   private static Looping I = null;
   private volatile boolean stop = false;
 
   private Looping() {}
 
-  public static final synchronized void make(final Plugin p) {
-    Backup.B = new File(p.getDataFolder(), "backups");
-    Backup.B.mkdirs();
-    Backup.P = p;
+  static final synchronized void make() {
     if (I != null)
       return;
     I = new Looping();
@@ -21,7 +14,7 @@ public class Looping extends Thread {
     I.start();
   }
 
-  public static final synchronized void end() {
+  static final synchronized void end() {
     if (I == null)
       return;
     I.stop = true;
@@ -35,13 +28,13 @@ public class Looping extends Thread {
   }
 
   @Override
-  public void run() {
+  public final void run() {
     while (true)
       try {
         if (this.stop)
           break;
         Thread.sleep(1000 * 60 * 20);
-        new Start().start();
+        Backup.start();
       } catch (final InterruptedException e) {
       }
   }

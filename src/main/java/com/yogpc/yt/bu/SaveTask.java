@@ -8,7 +8,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.World;
 import org.bukkit.plugin.Plugin;
 
-public class SaveTask implements Runnable {
+public final class SaveTask implements Runnable {
   private static final SaveTask I = new SaveTask();
 
   private SaveTask() {}
@@ -17,7 +17,7 @@ public class SaveTask implements Runnable {
   private final Queue<UUID> q = new LinkedList<UUID>();
   private World w = null;
 
-  public static final synchronized World get(final Plugin p) {
+  static final synchronized World get(final Plugin p) {
     Bukkit.getScheduler().runTask(p, SaveTask.I);
     while (!I.done)
       try {
@@ -29,21 +29,25 @@ public class SaveTask implements Runnable {
   }
 
   @Override
-  public void run() {
+  public final void run() {
+    // get initial list
     if (this.w == null && this.q.isEmpty())
       for (final World e : Bukkit.getWorlds())
         this.q.add(e.getUID());
+    // clean up previous
     else if (this.w != null) {
       // TODO should keep previous state?
       this.w.setAutoSave(true);
       this.w = null;
     }
+    // poll from list
     do {
       final UUID u = this.q.poll();
       if (u == null)
         break;
       this.w = Bukkit.getWorld(u);
     } while (this.w == null);
+    // full saving
     if (this.w != null) {
       this.w.setAutoSave(false);
       this.w.save();
