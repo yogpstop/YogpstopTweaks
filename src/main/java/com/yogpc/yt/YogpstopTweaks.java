@@ -10,15 +10,11 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
-import org.bukkit.event.player.PlayerChangedWorldEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
-import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import com.yogpc.yt.bu.Backup;
-import com.yogpc.yt.wi.PlayerData;
-import com.yogpc.yt.wi.WorldData;
 
 public class YogpstopTweaks extends JavaPlugin implements Listener {
   static final Charset utf8 = Charset.forName("UTF-8");
@@ -26,10 +22,8 @@ public class YogpstopTweaks extends JavaPlugin implements Listener {
   @Override
   public void onEnable() {
     final File df = getDataFolder();
-    PlayerData.bd = new File(df, "inv");
     Channel.loadCfg(df);
     Bouyomi.loadCfg(df);
-    WorldData.loadCfg(df);
     Backup.init(this);
     Bukkit.getPluginManager().registerEvents(this, this);
   }
@@ -41,8 +35,6 @@ public class YogpstopTweaks extends JavaPlugin implements Listener {
     if (Channel.com(cs, args, s))
       return true;
     else if (Bouyomi.com(cs, args, s))
-      return true;
-    else if (PlayerData.com(cs, args, s))
       return true;
     else if (Backup.com(cs, args, s))
       return true;
@@ -67,15 +59,5 @@ public class YogpstopTweaks extends JavaPlugin implements Listener {
     if (e.isCancelled())
       return;
     Bouyomi.chat(e.getPlayer(), e.getMessage(), null);
-  }
-
-  @EventHandler(priority = EventPriority.HIGHEST)
-  public void onChangedWorld(final PlayerChangedWorldEvent e) {
-    PlayerData.handle(e.getPlayer(), e.getFrom());
-  }
-
-  @EventHandler(priority = EventPriority.HIGHEST)
-  public void onRespawn(final PlayerRespawnEvent e) {
-    WorldData.handle(e);
   }
 }

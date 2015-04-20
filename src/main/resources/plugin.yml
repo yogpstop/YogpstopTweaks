@@ -15,6 +15,5 @@ commands:
   chd: {}
   bm:
     permission: com.yogpc.bm.setting
-  chwgrp: {}
   backup:
     permission: com.yogpc.bu.setting
