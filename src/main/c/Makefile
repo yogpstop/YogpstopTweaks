@@ -1,22 +1,29 @@
 CC=gcc
-CFLAGS=-c -Wall -Werror -O3 -march=native -pipe -flto
+CFLAGS=-Wall -Werror -O3 -march=native -pipe -flto
 LD=gcc
 LDFLAGS=-s
 
 SRCS=$(wildcard *.c)
+OBJS=$(SRCS:%.c=%.o)
+DEPS=$(SRCS:%.c=%.d)
+LIBS=-lz
+
+ifeq ($(OS),Windows_NT)
+EXEEXT=.exe
+endif
 
 ifneq ($(strip $(DEBUG)),)
 CFLAGS+=-DDEBUG=1
 endif
 
-OBJS=$(SRCS:%.c=%.o)
-LIBS=-lz
+all: backup$(EXEEXT)
 
-all: backup
-backup: $(OBJS)
-	$(LD) -o $@ $(LDFLAGS) $(OBJS) $(LIBS)
+-include $(DEPS)
+
+backup$(EXEEXT): $(OBJS)
+	$(LD) -o $@ $(LDFLAGS) $^ $(LIBS)
 .c.o:
-	$(CC) -o $@ $(CFLAGS) $<
+	$(CC) -c -MMD -MP -o $@ $(CFLAGS) $<
 clean:
-	rm -f $(OBJS) backup backup.exe
+	rm -f $(OBJS) $(DEPS) backup$(EXEEXT)
 .PHONY: clean

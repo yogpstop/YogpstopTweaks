@@ -32,7 +32,7 @@ static void getRec(char *b1, char *b2,
 			free(eb2);
 		} else {
 			if (*ep >= *es) *el =
-					realloc(*el, sizeof(sst_fentry) * (*es <<= 2));
+					realloc(*el, sizeof(sst_fentry) * (*es <<= 1));
 			st_fentry cur = *el + (*ep)++;
 			cur->name_real = eb1;
 			cur->name_virt = eb2;
@@ -149,6 +149,7 @@ static int get_mcr(st_raw obj) {
 	dbgprintf("get_mcr %04X %I64d\n", i, p);
 	obj->type &= ~DT_COMP;
 	obj->type |= U8P(obj->mcr_tmp, p + 4);
+	if (obj->out) free(obj->out);
 	if (DT_IS(obj->type, DT_ZLIB))
 		obj->out = ext_zlib(obj->mcr_tmp + p + 5,
 				U8_32(obj->mcr_tmp, p), &obj->len);

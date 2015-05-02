@@ -7,7 +7,7 @@
 		cmp = DT2CP(prv->type) - DT2CP(cur->type)
 
 void loop(char *dir, char *sz, char *coc, char *cop) {
-	st_compress oc = comp_init(coc), op = comp_init(cop);
+	st_compress oc = comp_init(coc, 1), op = comp_init(cop, 0);
 	st_decomp prv = NULL;
 	if (sz) { prv = dec_init(sz); dec_do(prv); }
 	st_raw cur = raw_init(dir); raw_do(cur);

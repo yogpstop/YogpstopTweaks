@@ -7,12 +7,13 @@ void comp_final(st_compress obj) {
 	gzclose(obj->f_out);
 	free(obj);
 }
-st_compress comp_init(char *out) {
+st_compress comp_init(char *out, int speed) {
 	st_compress ret = malloc(sizeof(sst_compress));
 	memset(ret, 0, sizeof(sst_compress));
 	ret->f_out = gzopen(out, "wb");
 	gzbuffer(ret->f_out, 1024 * 1024 * 16);//16MB buffer
-	gzsetparams(ret->f_out, Z_BEST_SPEED, Z_DEFAULT_STRATEGY);
+	gzsetparams(ret->f_out,
+			speed ? Z_BEST_SPEED : Z_BEST_COMPRESSION, Z_DEFAULT_STRATEGY);
 	return ret;
 }
 static size_t st_len(size_t len) {

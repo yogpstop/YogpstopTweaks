@@ -17,7 +17,7 @@ typedef struct {
 	gzFile f_out;
 	char *prev;
 } sst_compress, *st_compress;
-st_compress comp_init(char*);
+st_compress comp_init(char*, int);
 void comp_do(st_compress, uint16_t, char*, uint32_t, size_t, void*);
 void comp_final(st_compress);
 
