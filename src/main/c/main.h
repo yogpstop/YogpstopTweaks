@@ -25,6 +25,7 @@ void comp_final(st_compress);
 #define DT_GZIP 0x01
 #define DT_ZLIB 0x02
 #define DT_COMP (DT_GZIP | DT_ZLIB)
+#define DT_BSDIFF 0x08
 #define DT_MCR 0x10
 #define DT_NEW 0x20
 #define DT_MAX 0x3F

@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "main.h"
+#include "bsdiff/bsdiff.h"
 
 #define GENCMP cmp = !prv ? 1 : !cur ? -1 : strcmp(prv->name, cur->name); \
 		if (!cmp && DT_IS(prv->type, DT_MCR) && DT_IS(cur->type, DT_MCR)) \
@@ -28,7 +29,18 @@ void loop(char *dir, char *sz, char *coc, char *cop) {
 		if (prv->type != cur->type ||
 				(DT_IS(prv->type, DT_MCR) && prv->ts != cur->ts) ||
 				prv->len != cur->len || memcmp(prv->out, cur->out, prv->len)) {
-			comp_do(op, prv->type, prv->name, prv->ts, prv->len, prv->out);
+			ssize_t diffl = 0;
+			void *diff = NULL;
+			if (prv->len > 4096 && cur->len > 4096) {
+				diff = bsdiff(cur->out, cur->len,
+						prv->out, prv->len, &diffl);
+			}
+			if (diff)
+				comp_do(op, prv->type | DT_BSDIFF,
+						prv->name, prv->ts, diffl, diff);
+			else
+				comp_do(op, prv->type,
+						prv->name, prv->ts, prv->len, prv->out);
 		}
 		if (!dec_do(prv)) { dec_final(prv); prv = NULL; cmp = 1; }
 		if (!raw_do(cur)) { raw_final(cur); cur = NULL; cmp = -1; }
