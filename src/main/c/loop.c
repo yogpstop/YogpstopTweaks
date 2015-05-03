@@ -35,10 +35,10 @@ void loop(char *dir, char *sz, char *coc, char *cop) {
 				diff = bsdiff(cur->out, cur->len,
 						prv->out, prv->len, &diffl);
 			}
-			if (diff)
+			if (diff) {
 				comp_do(op, prv->type | DT_BSDIFF,
-						prv->name, prv->ts, diffl, diff);
-			else
+						prv->name, prv->ts, diffl, diff); free(diff);
+			} else
 				comp_do(op, prv->type,
 						prv->name, prv->ts, prv->len, prv->out);
 		}
