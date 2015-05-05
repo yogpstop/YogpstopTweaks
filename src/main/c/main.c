@@ -2,9 +2,7 @@
 #include <string.h>
 #include <time.h>
 #include <search.h>
-#include <windows.h>
 #include "main.h"
-#include "day.h"
 
 static int dcmp(const void *m1, const void *m2) {
 	return ((days*)m1)->day - ((days*)m2)->day;
@@ -13,36 +11,33 @@ static int dcmp(const void *m1, const void *m2) {
 int main(int argc, char **argv) {
 	if (argc != 3) return 1;
 	size_t len = strlen(argv[2]);
-	char *inal = malloc(len + 3);
+	char *inal = malloc(len + DIR_APP_LEN + 1);
 	memcpy(inal, argv[2], len);
-	if (inal[len - 1] != '\\') inal[len++] = '\\';
-	inal[len++] = '*';
-	inal[len] = 0;
-	WIN32_FIND_DATAA fd;
-	HANDLE h = FindFirstFileExA(inal, FindExInfoBasic, &fd,
-			FindExSearchNameMatch, NULL, FIND_FIRST_EX_LARGE_FETCH);
-	if (h == INVALID_HANDLE_VALUE) { free(inal); return 2; }
-	inal[--len] = 0;
+	gv_opendir(h, fd, inal, len, fdr);
 	uint64_t now = time(NULL);
 	char *inval;
 	char *new = malloc(len + 17);
 	memcpy(new, inal, len);
-	sprintf(new + len, "%016I64X", now);
+	sprintf(new + len, "%016" PFI64 "X", now);
 	char *old = malloc(len + 17);
 	memcpy(old, inal, len);
 	old[len] = 0;
 	old[len + 16] = 0;
 	now /= 60 * 60 * 24;
+#ifdef _WIN32
 	unsigned cupl = 0;
+#else
+	size_t cupl = 0;
+#endif
 	days *cup = NULL;
 	days key = {0, 0, NULL};
-	do {
-		if (fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) continue;
-		if (strlen(fd.cFileName) != 16) continue;
-		const uint64_t tt = strtoull(fd.cFileName, &inval, 16);
+	while (fdr) {
+		if (gv_isdir(fdr)) continue;
+		if (strlen(gv_fname(fdr)) != 16) continue;
+		const uint64_t tt = strtoull(gv_fname(fdr), &inval, 16);
 		if (*inval) continue;
-		if (!old[len] || memcmp(old + len, fd.cFileName, 16) < 0)
-			memcpy(old + len, fd.cFileName, 16);
+		if (!old[len] || memcmp(old + len, gv_fname(fdr), 16) < 0)
+			memcpy(old + len, gv_fname(fdr), 16);
 		key.day = tt / (60 * 60 * 24);
 		if (key.day >= now) continue;
 		days *de = lfind(&key, cup, &cupl, sizeof(days), dcmp);
@@ -53,8 +48,9 @@ int main(int argc, char **argv) {
 		}
 		de->secs = realloc(de->secs, ++de->sl * sizeof(uint64_t));
 		de->secs[de->sl - 1] = tt;
-	} while(FindNextFileA(h, &fd));
-	FindClose(h);
+		gv_readdir(h, fd, fdr);
+	}
+	gv_closedir(h);
 	char *tmp = malloc(len + 6);
 	memcpy(tmp, inal, len);
 	strcpy(tmp + len, "Ztemp");
@@ -62,6 +58,8 @@ int main(int argc, char **argv) {
 	if (old[len]) { remove(old); rename(tmp, old); }
 	else remove(tmp);
 	xz_c_run(new, len, cup, cupl);
+	while (cupl--) free(cup[cupl].secs);
+	free(cup);
 	free(tmp);
 	free(old);
 	free(new);

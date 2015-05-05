@@ -32,7 +32,7 @@ static void st_write(size_t len, void **cur) {
 }
 void comp_do(st_compress obj, uint16_t type, char *name,
 		uint32_t ts, size_t len, void *data) {
-	dbgprintf("comp_do %04X %08X %I64d %16p %s\n", type, ts, len, data, name);
+	dbgprintf("comp_do %04X %08X %"PFZ"u %16p %s\n", type, ts, len, data, name);
 	int sname = obj->prev && !strcmp(name, obj->prev);
 	size_t in_remain = 1 + (sname ? 0 : st_len(strlen(name)) + strlen(name))
 			+ (DT_IS(type, DT_MCR) ? 5 : 0) + st_len(len) + len;

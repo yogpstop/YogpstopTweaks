@@ -1,32 +1,24 @@
 #include <stdlib.h>
-#include <windows.h>
+#include <string.h>
 #include "main.h"
 
-//TODO UNIX
 static void getRec(char *b1, char *b2,
 		st_fentry *el, size_t *es, size_t *ep) {
 	size_t len = strlen(b1);
-	char *b1s = malloc(len + 3);
+	char *b1s = malloc(len + DIR_APP_LEN + 1);
 	memcpy(b1s, b1, len);
-	if (b1s[len - 1] != '\\') b1s[len++] = '\\';
-	b1s[len++] = '*';
-	b1s[len] = 0;
-	WIN32_FIND_DATAA fd;
-	HANDLE h = FindFirstFileExA(b1s, FindExInfoBasic, &fd,
-			FindExSearchNameMatch, NULL, FIND_FIRST_EX_LARGE_FETCH);
-	if (h == INVALID_HANDLE_VALUE) { free(b1s); return; }
-	b1s[--len] = 0;
-	do {
+	gv_opendir(h, fd, b1s, len, fdr);
+	while (fdr) {
 		len = strlen(b2);
-		char *eb2 = malloc(len + strlen(fd.cFileName) + 2);
+		char *eb2 = malloc(len + strlen(gv_fname(fdr)) + 2);
 		memcpy(eb2, b2, len);
 		if (len) eb2[len++] = '/';
-		strcpy(eb2 + len, fd.cFileName);
-		char *eb1 = malloc(strlen(b1s) + strlen(fd.cFileName) + 1);
+		strcpy(eb2 + len, gv_fname(fdr));
+		char *eb1 = malloc(strlen(b1s) + strlen(gv_fname(fdr)) + 1);
 		strcpy(eb1, b1s);
-		strcat(eb1, fd.cFileName);
-		if (fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
-			if (strcmp(fd.cFileName, ".") && strcmp(fd.cFileName, ".."))
+		strcat(eb1, gv_fname(fdr));
+		if (gv_isdir(fdr)) {
+			if (strcmp(gv_fname(fdr), ".") && strcmp(gv_fname(fdr), ".."))
 				getRec(eb1, eb2, el, es, ep);
 			free(eb1);
 			free(eb2);
@@ -37,8 +29,9 @@ static void getRec(char *b1, char *b2,
 			cur->name_real = eb1;
 			cur->name_virt = eb2;
 		}
-	} while(FindNextFileA(h, &fd));
-	FindClose(h);
+		gv_readdir(h, fd, fdr);
+	}
+	gv_closedir(h);
 	free(b1s);
 }
 static int cmpstfe(const void *p1, const void *p2) {
@@ -124,7 +117,7 @@ static void read_gzip(st_raw obj, char *name) {
 static int is_gzip(char *name) {
 	uint16_t tmp;
 	FILE *f = fopen(name, "rb");
-	fread(&tmp, 1, 2, f);
+	if (2 > fread(&tmp, 1, 2, f)) tmp = 0;
 	fclose(f);
 	return tmp == 0x8B1F;//FIXME endian
 }
@@ -146,7 +139,7 @@ static int get_mcr(st_raw obj) {
 		if (DT2CP(obj->type) >= 1023) return 0;
 		obj->type += CP2DT(1);
 	}
-	dbgprintf("get_mcr %04X %I64d\n", i, p);
+	dbgprintf("get_mcr %04X %"PFZ"u\n", i, p);
 	obj->type &= ~DT_COMP;
 	obj->type |= U8P(obj->mcr_tmp, p + 4);
 	if (obj->out) free(obj->out);
@@ -159,7 +152,7 @@ static int get_mcr(st_raw obj) {
 	return 1;
 }
 int raw_do(st_raw obj) {
-	dbgprintf("raw_do %04X %I64d %I64d %s\n", obj->type,
+	dbgprintf("raw_do %04X %"PFZ"u %"PFZ"u %s\n", obj->type,
 			obj->epos, obj->ecount, obj->name);
 	if (DT_IS(obj->type, DT_MCR) && DT2CP(obj->type) < 1023) {
 		dbgprintf("raw_do mcr continue\n");

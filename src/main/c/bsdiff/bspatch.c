@@ -30,7 +30,9 @@ __FBSDID("$FreeBSD: src/usr.bin/bsdiff/bspatch/bspatch.c,v 1.1 2005/08/06 01:59:
 
 #define BZ_OK 1
 #define BZ_STREAM_END 1
+#ifdef _WIN32
 #define u_char unsigned char
+#endif
 #define off_t ssize_t
 #define FILE AAMIS
 #define cpfbz2 cpf

@@ -1,8 +1,9 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <lzma.h>
 #include <zlib.h>
-#include "day.h"
+#include "main.h"
 
 void xz_c_run(char *base, size_t blen, days *ds, unsigned dsl) {
 	int i, j; FILE *inf1, *outfile; gzFile infile; lzma_stream ls;
@@ -25,13 +26,13 @@ void xz_c_run(char *base, size_t blen, days *ds, unsigned dsl) {
 			continue;
 		ls.next_out = outb;
 		ls.avail_out = outbl;
-		sprintf(base + blen, "%012I64X", ds[i].day);
+		sprintf(base + blen, "%012" PFI64 "X", ds[i].day);
 		outfile = fopen(base, "wb");
 		for (j = 0; j < ds[i].sl; j++) {
-			sprintf(base + blen, "%016I64X", ds[i].secs[j]);
+			sprintf(base + blen, "%016" PFI64 "X", ds[i].secs[j]);
 			memcpy(hdr, ds[i].secs + j, 8);
 			inf1 = fopen(base, "rb"); fseek(inf1, -4, SEEK_END);
-			fread(hdr + 8, 1, 4, inf1); fclose(inf1);
+			if (fread(hdr + 8, 1, 4, inf1)); fclose(inf1);
 			infile = gzopen(base, "rb");
 			gzbuffer(infile, 1024 * 1024 * 16);
 			ls.next_in = hdr;

@@ -9,6 +9,40 @@
 #define dbgprintf(...)
 #endif
 
+#ifdef _WIN32
+#include <windows.h>
+#define DIR_APP_LEN 2
+#define gv_opendir(v, e, n, l, r) \
+		if (n[l - 1] != '\\') n[l++] = '\\'; n[l++] = '*'; n[l] = 0; \
+		WIN32_FIND_DATAA e; \
+		HANDLE v = FindFirstFileExA(n, FindExInfoBasic, &e, \
+			FindExSearchNameMatch, NULL, FIND_FIRST_EX_LARGE_FETCH); \
+		WIN32_FIND_DATAA *r = v != INVALID_HANDLE_VALUE ? &e : NULL; \
+		n[--l] = 0;
+#define gv_readdir(v, e, r) r = FindNextFile(v, &e) ? &e : NULL;
+#define gv_closedir(v) FindClose(v);
+#define gv_fname(r) r->cFileName
+#define gv_isdir(r) (r->dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+#define PFI64 "I64"
+#define PFZ "I"
+#else
+#include <dirent.h>
+#define DIR_APP_LEN 0
+#define gv_opendir(v, e, n, l, r) \
+		if (n[l - 1] != '/') n[l++] = '/'; n[l] = 0; \
+		struct dirent e, *r; DIR *v = opendir(n); gv_readdir(v, e, r);
+#define gv_readdir(v, e, r) if (readdir_r(v, &e, &r)) r = NULL;
+#define gv_closedir(v) closedir(v);
+#define gv_fname(r) r->d_name
+#define gv_isdir(r) (r->d_type & DT_DIR)
+#if __LP64__
+#define PFI64 "l"
+#else
+#define PFI64 "ll"
+#endif
+#define PFZ "z"
+#endif
+
 #define cast_struct(str, obj, mem) ((str*)(((void*)obj) - offsetof(str, mem)))
 #define cast_comp(obj, mem) cast_struct(sst_compress, obj, mem)
 
@@ -70,3 +104,10 @@ int raw_do(st_raw);
 void raw_final(st_raw);
 
 void loop(char*, char*, char*, char*);
+
+typedef struct {
+	uint64_t day;
+	int sl;
+	uint64_t *secs;
+} days;
+void xz_c_run(char*, size_t, days*, unsigned);
