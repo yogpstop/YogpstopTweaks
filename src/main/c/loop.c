@@ -7,11 +7,11 @@
 		if (!cmp && DT_IS(prv->type, DT_MCR) && DT_IS(cur->type, DT_MCR)) \
 		cmp = DT2CP(prv->type) - DT2CP(cur->type)
 
-void loop(char *dir, char *sz, char *coc, char *cop) {
+void loop(char *dir, char *sz, char *coc, char *cop, char **filter) {
 	st_compress oc = comp_init(coc, 1), op = comp_init(cop, 0);
 	st_decomp prv = NULL;
 	if (sz) { prv = dec_init(sz); dec_do(prv); }
-	st_raw cur = raw_init(dir); raw_do(cur);
+	st_raw cur = raw_init(dir, filter); raw_do(cur);
 	int GENCMP;
 	while (prv || cur) {
 		while (cmp < 0 && prv) {

@@ -27,7 +27,7 @@
 #define PFZ "I"
 #else
 #include <dirent.h>
-#define DIR_APP_LEN 0
+#define DIR_APP_LEN 1
 #define gv_opendir(v, e, n, l, r) \
 		if (n[l - 1] != '/') n[l++] = '/'; n[l] = 0; \
 		struct dirent e, *r; DIR *v = opendir(n); gv_readdir(v, e, r);
@@ -99,11 +99,11 @@ typedef struct {
 	size_t len;
 	void *out;
 } sst_raw, *st_raw;
-st_raw raw_init(char*);
+st_raw raw_init(char*, char**);
 int raw_do(st_raw);
 void raw_final(st_raw);
 
-void loop(char*, char*, char*, char*);
+void loop(char*, char*, char*, char*, char**);
 
 typedef struct {
 	uint64_t day;
@@ -111,3 +111,8 @@ typedef struct {
 	uint64_t *secs;
 } days;
 void xz_c_run(char*, size_t, days*, unsigned);
+
+#define mc_rcon_free(p) free(((void*)(p)) - 12)
+int create_socket(char*, char*);
+int mc_rcon_login(int, int32_t*, const char*);
+char *mc_rcon_com(int, int32_t*, const char*);

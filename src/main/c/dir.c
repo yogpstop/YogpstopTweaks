@@ -3,31 +3,39 @@
 #include "main.h"
 
 static void getRec(char *b1, char *b2,
-		st_fentry *el, size_t *es, size_t *ep) {
-	size_t len = strlen(b1);
-	char *b1s = malloc(len + DIR_APP_LEN + 1);
+		st_fentry *el, size_t *es, size_t *ep, char **filter) {
+	size_t len = strlen(b1), fidx;
+	char *b1s = malloc(len + DIR_APP_LEN + 1), *eb1, *eb2;
 	memcpy(b1s, b1, len);
 	gv_opendir(h, fd, b1s, len, fdr);
 	while (fdr) {
 		len = strlen(b2);
-		char *eb2 = malloc(len + strlen(gv_fname(fdr)) + 2);
+		eb2 = malloc(len + strlen(gv_fname(fdr)) + 2);
 		memcpy(eb2, b2, len);
 		if (len) eb2[len++] = '/';
 		strcpy(eb2 + len, gv_fname(fdr));
-		char *eb1 = malloc(strlen(b1s) + strlen(gv_fname(fdr)) + 1);
+		eb1 = malloc(strlen(b1s) + strlen(gv_fname(fdr)) + 1);
 		strcpy(eb1, b1s);
 		strcat(eb1, gv_fname(fdr));
 		if (gv_isdir(fdr)) {
 			if (strcmp(gv_fname(fdr), ".") && strcmp(gv_fname(fdr), ".."))
-				getRec(eb1, eb2, el, es, ep);
+				getRec(eb1, eb2, el, es, ep, filter);
 			free(eb1);
 			free(eb2);
 		} else {
-			if (*ep >= *es) *el =
-					realloc(*el, sizeof(sst_fentry) * (*es <<= 1));
-			st_fentry cur = *el + (*ep)++;
-			cur->name_real = eb1;
-			cur->name_virt = eb2;
+			for (fidx = 0; filter[fidx]; fidx++) {
+				if (!strncmp(eb2, filter[fidx] + 1, strlen(filter[fidx] + 1))) {
+					fidx = filter[fidx][0] != '+';
+					break;
+				}
+			}
+			if (!fidx) {
+				if (*ep >= *es) *el =
+						realloc(*el, sizeof(sst_fentry) * (*es <<= 1));
+				st_fentry cur = *el + (*ep)++;
+				cur->name_real = eb1;
+				cur->name_virt = eb2;
+			} else { free(eb1); free(eb2); }
 		}
 		gv_readdir(h, fd, fdr);
 	}
@@ -37,12 +45,12 @@ static void getRec(char *b1, char *b2,
 static int cmpstfe(const void *p1, const void *p2) {
 	return strcmp(((st_fentry)p1)->name_virt, ((st_fentry)p2)->name_virt);
 }
-st_raw raw_init(char *in) {
+st_raw raw_init(char *in, char **filter) {
 	st_raw ret = malloc(sizeof(sst_raw));
 	memset(ret, 0, sizeof(sst_raw));
 	ret->ecount = 16;
 	ret->entries = malloc(sizeof(sst_fentry) * ret->ecount);
-	getRec(in, "", &ret->entries, &ret->ecount, &ret->epos);
+	getRec(in, "", &ret->entries, &ret->ecount, &ret->epos, filter);
 	ret->ecount = ret->epos;
 	ret->epos = 0;
 	ret->entries = realloc(ret->entries, sizeof(sst_fentry) * ret->ecount);
