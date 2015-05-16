@@ -14,8 +14,6 @@ import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import com.yogpc.yt.bu.Backup;
-
 public class YogpstopTweaks extends JavaPlugin implements Listener {
   static final Charset utf8 = Charset.forName("UTF-8");
 
@@ -24,7 +22,6 @@ public class YogpstopTweaks extends JavaPlugin implements Listener {
     final File df = getDataFolder();
     Channel.loadCfg(df);
     Bouyomi.loadCfg(df);
-    Backup.init(this);
     Bukkit.getPluginManager().registerEvents(this, this);
   }
 
@@ -35,8 +32,6 @@ public class YogpstopTweaks extends JavaPlugin implements Listener {
     if (Channel.com(cs, args, s))
       return true;
     else if (Bouyomi.com(cs, args, s))
-      return true;
-    else if (Backup.com(cs, args, s))
       return true;
     return false;
   }

@@ -4,7 +4,7 @@
 #include "bsdiff/bsdiff.h"
 
 #define GENCMP cmp = !prv ? 1 : !cur ? -1 : strcmp(prv->name, cur->name); \
-		if (!cmp && DT_IS(prv->type, DT_MCR) && DT_IS(cur->type, DT_MCR)) \
+		if (!cmp && prv->type & DT_MCR && cur->type & DT_MCR) \
 		cmp = DT2CP(prv->type) - DT2CP(cur->type)
 
 void loop(char *dir, char *sz, char *coc, char *cop, char **filter) {
@@ -27,7 +27,7 @@ void loop(char *dir, char *sz, char *coc, char *cop, char **filter) {
 		if (cmp || !prv || !cur) continue;
 		comp_do(oc, cur->type, cur->name, cur->ts, cur->len, cur->out);
 		if (prv->type != cur->type ||
-				(DT_IS(prv->type, DT_MCR) && prv->ts != cur->ts) ||
+				(prv->type & DT_MCR && prv->ts != cur->ts) ||
 				prv->len != cur->len || memcmp(prv->out, cur->out, prv->len)) {
 			ssize_t diffl = 0;
 			void *diff = NULL;

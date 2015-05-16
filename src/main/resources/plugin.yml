@@ -4,8 +4,6 @@ main: com.yogpc.yt.YogpstopTweaks
 permissions:
   com.yogpc.bm.setting:
     default: op
-  com.yogpc.bu.setting:
-    default: op
 commands:
   ch: {}
   chj: {}
@@ -15,5 +13,3 @@ commands:
   chd: {}
   bm:
     permission: com.yogpc.bm.setting
-  backup:
-    permission: com.yogpc.bu.setting

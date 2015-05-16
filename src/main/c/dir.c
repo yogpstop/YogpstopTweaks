@@ -68,126 +68,41 @@ void raw_final(st_raw obj) {
 	free(obj->entries);
 	free(obj);
 }
-static void *ext_zlib(void *src, size_t srcl, size_t *dstl) {
-	*dstl = 1024 * 1024 * 16; //16MB
-	void *dst = malloc(*dstl);
-	z_stream zs = {};
-	zs.next_in = src;
-	zs.avail_in = srcl;
-	zs.next_out = dst;
-	zs.avail_out = *dstl;
-	inflateInit(&zs);
-	int res;
-	while (1) {
-		res = inflate(&zs, Z_NO_FLUSH);
-		if (res == Z_STREAM_END) break;
-		if (res != Z_OK || zs.avail_in == 0) break;
-		if (zs.avail_out == 0) {
-			dst = realloc(dst, *dstl << 1);
-			zs.next_out = dst + *dstl;
-			zs.avail_out = *dstl;
-			*dstl <<= 1;
-		}
-	}
-	inflateEnd(&zs);
-	*dstl -= zs.avail_out;
-	return realloc(dst, *dstl);
-}
-static void read_raw(st_raw obj, char *name) {
-	size_t len = 1024 * 1024 * 16; //16MB
-	obj->out = malloc(len);
-	obj->len = 0;
-	FILE *f = fopen(name, "rb");
-	size_t tmp;
-	while ((tmp = fread(obj->out + obj->len, 1, len - obj->len, f))) {
-		obj->len += tmp;
-		if (len <= obj->len)
-			obj->out = realloc(obj->out, len <<= 2);
-	}
-	fclose(f);
-	obj->out = realloc(obj->out, obj->len);
-}
-static void read_gzip(st_raw obj, char *name) {
-	size_t len = 1024 * 1024 * 16; //16MB
-	obj->out = malloc(len);
-	obj->len = 0;
-	gzFile f = gzopen(name, "rb");
-	gzbuffer(f, 1024 * 1024); //1MB
-	size_t tmp;
-	while ((tmp = gzread(f, obj->out + obj->len, len - obj->len))) {
-		obj->len += tmp;
-		if (len <= obj->len)
-			obj->out = realloc(obj->out, len <<= 2);
-	}
-	gzclose(f);
-	obj->out = realloc(obj->out, obj->len);
-}
-static int is_gzip(char *name) {
-	uint16_t tmp;
-	FILE *f = fopen(name, "rb");
-	if (2 > fread(&tmp, 1, 2, f)) tmp = 0;
-	fclose(f);
-	return tmp == 0x8B1F;//FIXME endian
-}
-#define U8P(p, o) (*((uint8_t*)(((void*)(p)) + (o))))
-#define rU32P(p, o) (*((uint32_t*)(((void*)(p)) + (o))))
-//FIXME endian
-#define U8_24(p, o) ((U8P(p, o) << 16) | (U8P(p, o + 1) << 8) \
-		| (U8P(p, o + 2)))
-#define U8_32(p, o) ((U8P(p, o) << 24) | (U8P(p, o + 1) << 16) \
-		| (U8P(p, o + 2) << 8) | (U8P(p, o + 3)))
-static int get_mcr(st_raw obj) {
-	uint16_t i;
-	size_t p;
-	while (1) {
-		i = DT2CP(obj->type) * 4;
-		p = U8_24(obj->mcr_tmp, i) * 4096;
-		obj->ts = rU32P(obj->mcr_tmp, i + 4096);
-		if (p >= 8192) break;
-		if (DT2CP(obj->type) >= 1023) return 0;
-		obj->type += CP2DT(1);
-	}
-	dbgprintf("get_mcr %04X %"PFZ"u\n", i, p);
-	obj->type &= ~DT_COMP;
-	obj->type |= U8P(obj->mcr_tmp, p + 4);
-	if (obj->out) free(obj->out);
-	if (DT_IS(obj->type, DT_ZLIB))
-		obj->out = ext_zlib(obj->mcr_tmp + p + 5,
-				U8_32(obj->mcr_tmp, p), &obj->len);
-	else
-		obj->out = NULL; //FIXME extract gzip
-	dbgprintf("GET_MCR\n");
-	return 1;
-}
 int raw_do(st_raw obj) {
 	dbgprintf("raw_do %04X %"PFZ"u %"PFZ"u %s\n", obj->type,
 			obj->epos, obj->ecount, obj->name);
-	if (DT_IS(obj->type, DT_MCR) && DT2CP(obj->type) < 1023) {
+	if (obj->out) { free(obj->out); obj->out = NULL; }
+	if (obj->type & DT_MCR && DT2CP(obj->type) < 1023) {
 		dbgprintf("raw_do mcr continue\n");
-		obj->type += CP2DT(1);
-		return get_mcr(obj) ? 1 : raw_do(obj);
+		uint8_t t;
+		int i = get_mcr(obj->mcr_tmp, obj->mcr_len, DT2CP(obj->type) + 1,
+				&t, &obj->ts, &obj->out, &obj->len);
+		if (i < 0) return raw_do(obj);
+		obj->type = (obj->type & (~DT_COMP & DT_MAX)) | t | CP2DT(i);
+		return 1;
 	}
 	if (obj->epos >= obj->ecount) return 0;
 	if (obj->mcr_tmp) { free(obj->mcr_tmp); obj->mcr_tmp = NULL; }
-	if (obj->out) { free(obj->out); obj->out = NULL; }
 	dbgprintf("raw_do new entry\n");
 	obj->name = obj->entries[obj->epos].name_virt;
-	if (is_gzip(obj->entries[obj->epos].name_real)) {
+	if (file_read(obj->entries[obj->epos].name_real, &obj->out, &obj->len))
 		obj->type = DT_GZIP;
-		read_gzip(obj, obj->entries[obj->epos].name_real);
-	} else {
+	else
 		obj->type = 0;
-		read_raw(obj, obj->entries[obj->epos].name_real);
-	}
 	obj->epos++;
 	dbgprintf("raw_do new OK\n");
 	if ((strstr(obj->name, ".mca") || strstr(obj->name, ".mcr"))
 		&& obj->len >= 8192) {
 		obj->type |= DT_MCR;
+		obj->mcr_len = obj->len;
 		obj->mcr_tmp = obj->out;
 		obj->out = NULL;
-		obj->mcr_len = obj->len;
-		return get_mcr(obj) ? 1 : raw_do(obj);
+		uint8_t t;
+		int i = get_mcr(obj->mcr_tmp, obj->mcr_len, DT2CP(obj->type) + 1,
+				&t, &obj->ts, &obj->out, &obj->len);
+		if (i < 0) return raw_do(obj);
+		obj->type = (obj->type & (~DT_COMP & DT_MAX)) | t | CP2DT(i);
+		return 1;
 	}
 	return 1;
 }

@@ -55,7 +55,6 @@ st_compress comp_init(char*, int);
 void comp_do(st_compress, uint16_t, char*, uint32_t, size_t, void*);
 void comp_final(st_compress);
 
-#define DT_IS(t, c) ((t) & (c))
 #define DT_GZIP 0x01
 #define DT_ZLIB 0x02
 #define DT_COMP (DT_GZIP | DT_ZLIB)
@@ -116,3 +115,10 @@ void xz_c_run(char*, size_t, days*, unsigned);
 int create_socket(char*, char*);
 int mc_rcon_login(int, int32_t*, const char*);
 char *mc_rcon_com(int, int32_t*, const char*);
+
+int file_read(const char*, void**, size_t*);
+void file_write_gz(const char*, const void*, const size_t);
+void file_write_raw(const char*, const void*, const size_t);
+void *zlib_inf(void*, const size_t, size_t*);
+void *zlib_def(void*, const size_t, size_t*);
+int get_mcr(void*, const size_t, int, uint8_t*, uint32_t*, void**, size_t*);

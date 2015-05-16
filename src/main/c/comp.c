@@ -35,7 +35,7 @@ void comp_do(st_compress obj, uint16_t type, char *name,
 	dbgprintf("comp_do %04X %08X %"PFZ"u %16p %s\n", type, ts, len, data, name);
 	int sname = obj->prev && !strcmp(name, obj->prev);
 	size_t in_remain = 1 + (sname ? 0 : st_len(strlen(name)) + strlen(name))
-			+ (DT_IS(type, DT_MCR) ? 5 : 0) + st_len(len) + len;
+			+ (type & DT_MCR ? 5 : 0) + st_len(len) + len;
 	void * const in_buf = malloc(in_remain);
 	void *cur = in_buf;
 	*((uint8_t*)cur++) = (uint8_t) (type | (sname ? 0 : DT_NEW));
@@ -49,7 +49,7 @@ void comp_do(st_compress obj, uint16_t type, char *name,
 		memcpy(cur, name, nlen);
 		cur += nlen;
 	}
-	if (DT_IS(type, DT_MCR)) {
+	if (type & DT_MCR) {
 		memcpy(cur, &ts, 4);
 		cur += 4;
 		*((uint8_t*)cur++) = (uint8_t) (type >> 8);

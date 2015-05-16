@@ -29,7 +29,7 @@ int dec_do(st_decomp obj) {
 	uint8_t tmp;
 	if (!gzread(obj->in_file, &tmp, 1)) return 0;
 	obj->type = tmp;
-	if (DT_IS(obj->type, DT_NEW)) {
+	if (obj->type & DT_NEW) {
 		size_t nlen = read_len(obj);
 		if (obj->name) free(obj->name);
 		obj->name = malloc(nlen + 1);
@@ -37,7 +37,7 @@ int dec_do(st_decomp obj) {
 		obj->name[nlen] = 0;
 		obj->type &= ~DT_NEW;
 	}
-	if (DT_IS(obj->type, DT_MCR)) {
+	if (obj->type & DT_MCR) {
 		gzread(obj->in_file, &obj->ts, 4);// must return 4
 		gzread(obj->in_file, &tmp, 1);// must return 1
 		obj->type |= tmp << 8;
