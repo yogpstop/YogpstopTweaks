@@ -6,7 +6,7 @@ LDFLAGS=-s
 SRCS:=$(wildcard *.c bsdiff/*.c)
 OBJS:=$(SRCS:%.c=%.o)
 DEPS:=$(SRCS:%.c=%.d)
-LIBS:=-lz $(shell pkg-config --libs liblzma)
+LIBS:=-lz -lm $(shell pkg-config --libs liblzma)
 CCFLAGS:=$(CFLAGS) $(shell pkg-config --cflags liblzma)
 LLDFLAGS:=$(LDFLAGS)
 

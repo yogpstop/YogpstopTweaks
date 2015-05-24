@@ -77,7 +77,7 @@ int raw_do(st_raw obj) {
 		uint8_t t;
 		int i = get_mcr(obj->mcr_tmp, obj->mcr_len, DT2CP(obj->type) + 1,
 				&t, &obj->ts, &obj->out, &obj->len);
-		if (i < 0) return raw_do(obj);
+		if (i < 0) { obj->type = 0; return raw_do(obj); }
 		obj->type = (obj->type & (~DT_COMP & DT_MAX)) | t | CP2DT(i);
 		return 1;
 	}
@@ -100,7 +100,7 @@ int raw_do(st_raw obj) {
 		uint8_t t;
 		int i = get_mcr(obj->mcr_tmp, obj->mcr_len, DT2CP(obj->type) + 1,
 				&t, &obj->ts, &obj->out, &obj->len);
-		if (i < 0) return raw_do(obj);
+		if (i < 0) { obj->type = 0; return raw_do(obj); }
 		obj->type = (obj->type & (~DT_COMP & DT_MAX)) | t | CP2DT(i);
 		return 1;
 	}

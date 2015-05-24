@@ -25,12 +25,14 @@ void *MCRZL_FUNC(void *src, const size_t srcl, size_t *dstl) {
 #else
 	deflateInit(&zs, Z_DEFAULT_COMPRESSION);
 #endif
-	int res;
+	int res; int flush = Z_NO_FLUSH;
 	while (1) {
-		res = MCRZL_DO(&zs, Z_NO_FLUSH);
-		if (res == Z_STREAM_END) break;
-		if (res != Z_OK || zs.avail_in == 0) break;
-		if (zs.avail_out == 0) {
+		res = MCRZL_DO(&zs, flush);
+		if (res != Z_OK) break;
+#if !MCRZL_INF
+		if (!zs.avail_in) flush = Z_FINISH;
+#endif
+		if (!zs.avail_out) {
 			dst = realloc(dst, *dstl << 1);
 			zs.next_out = dst + *dstl;
 			zs.avail_out = *dstl;

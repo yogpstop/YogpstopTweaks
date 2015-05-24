@@ -109,6 +109,13 @@ static void config_wrap(char *cfile) {
 	free(buf);
 }
 int main(int argc, char **argv) {
+	if (argc == 4) {
+		char *inval;
+		uint64_t ts = strtoull(argv[3], &inval, 16);
+		if (*inval) return 2;
+		build(argv[1], argv[2], ts);
+		return 0;
+	}
 	if (argc != 2) return 1;
 #if _WIN32
 	WSADATA wsad; WSAStartup(WINSOCK_VERSION, &wsad);

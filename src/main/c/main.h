@@ -2,6 +2,7 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <zlib.h>
+#include <lzma.h>
 
 #ifdef DEBUG
 #define dbgprintf(...) printf(__VA_ARGS__)
@@ -11,7 +12,9 @@
 
 #ifdef _WIN32
 #include <windows.h>
+#define MKDIR_PP(fn) mkdir(fn)
 #define DIR_APP_LEN 2
+#define DIR_SEP '\\'
 #define gv_opendir(v, e, n, l, r) \
 		if (n[l - 1] != '\\') n[l++] = '\\'; n[l++] = '*'; n[l] = 0; \
 		WIN32_FIND_DATAA e; \
@@ -27,7 +30,9 @@
 #define PFZ "I"
 #else
 #include <dirent.h>
+#define MKDIR_PP(fn) mkdir(fn, 0755)
 #define DIR_APP_LEN 1
+#define DIR_SEP '/'
 #define gv_opendir(v, e, n, l, r) \
 		if (n[l - 1] != '/') n[l++] = '/'; n[l] = 0; \
 		struct dirent e, *r; DIR *v = opendir(n); gv_readdir(v, e, r);
@@ -68,7 +73,9 @@ void comp_final(st_compress);
 
 typedef struct {
 //PRIVATE
-	gzFile in_file;
+	void *in;
+	int xz;
+	int (*read)(void*, void*, unsigned);
 //PUBLIC
 	uint16_t type;
 	char *name;
@@ -76,7 +83,7 @@ typedef struct {
 	size_t len;
 	void *out;
 } sst_decomp, *st_decomp;
-st_decomp dec_init(char*);
+st_decomp dec_init(void*, int);
 int dec_do(st_decomp);
 void dec_final(st_decomp);
 
@@ -111,6 +118,18 @@ typedef struct {
 } days;
 void xz_c_run(char*, size_t, days*, unsigned);
 
+typedef struct {
+	lzma_stream ls;
+	FILE *in;
+	size_t inbl;
+	void *inb;
+	uint32_t rem;
+} sst_xz_d, *st_xz_d;
+st_xz_d xz_d_init(char*);
+void xz_d_final(st_xz_d);
+uint64_t xz_d_next(st_xz_d);
+int xz_d_read(st_xz_d, void*, unsigned);
+
 #define mc_rcon_free(p) free(((void*)(p)) - 12)
 int create_socket(char*, char*);
 int mc_rcon_login(int, int32_t*, const char*);
@@ -122,3 +141,5 @@ void file_write_raw(const char*, const void*, const size_t);
 void *zlib_inf(void*, const size_t, size_t*);
 void *zlib_def(void*, const size_t, size_t*);
 int get_mcr(void*, const size_t, int, uint8_t*, uint32_t*, void**, size_t*);
+
+void build(char*, char*, uint64_t);

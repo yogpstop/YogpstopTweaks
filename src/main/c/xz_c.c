@@ -5,6 +5,10 @@
 #include <zlib.h>
 #include "main.h"
 
+static int u64t_cmp(const void *a1, const void *a2) {
+	return *((uint64_t*) a2) - *((uint64_t*) a1);
+}
+
 void xz_c_run(char *base, size_t blen, days *ds, unsigned dsl) {
 	int i, j; FILE *inf1, *outfile; gzFile infile; lzma_stream ls;
 	const size_t outbl = 1024 * 1024 * 16; void *outb = malloc(outbl);
@@ -21,6 +25,7 @@ void xz_c_run(char *base, size_t blen, days *ds, unsigned dsl) {
 	lz2opt.mf = LZMA_MF_BT4;
 	lz2opt.depth = 512;
 	for (i = 0; i < dsl; i++) {
+		qsort(ds[i].secs, ds[i].sl, sizeof(uint64_t), u64t_cmp);
 		memset(&ls, 0, sizeof(lzma_stream));
 		if (LZMA_OK != lzma_stream_encoder(&ls, filters, LZMA_CHECK_NONE))
 			continue;
