@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#if _WIN32
+#ifdef _WIN32
 #include <ws2tcpip.h>
 #include <winsock2.h>
 #else

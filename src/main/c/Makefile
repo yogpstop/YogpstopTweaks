@@ -1,7 +1,7 @@
-CC=gcc
-CFLAGS=-Wall -Werror -O3 -march=native -pipe -flto
-LD=gcc
-LDFLAGS=-s
+CC:=gcc
+CFLAGS:=-Wall -Werror -O3 -march=native -pipe -flto
+LD:=gcc
+LDFLAGS:=-s
 
 SRCS:=$(wildcard *.c bsdiff/*.c)
 OBJS:=$(SRCS:%.c=%.o)
@@ -11,7 +11,7 @@ CCFLAGS:=$(CFLAGS) $(shell pkg-config --cflags liblzma)
 LLDFLAGS:=$(LDFLAGS)
 
 ifeq ($(SYS), mingw)
-EXT=.exe
+EXT:=.exe
 LIBS+=-lws2_32
 LLDFLAGS+=-static -mwindows
 endif

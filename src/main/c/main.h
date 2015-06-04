@@ -4,6 +4,8 @@
 #include <zlib.h>
 #include <lzma.h>
 
+extern volatile int need_exit;
+
 #ifdef DEBUG
 #define dbgprintf(...) printf(__VA_ARGS__)
 #else
@@ -141,5 +143,3 @@ void file_write_raw(const char*, const void*, const size_t);
 void *zlib_inf(void*, const size_t, size_t*);
 void *zlib_def(void*, const size_t, size_t*);
 int get_mcr(void*, const size_t, int, uint8_t*, uint32_t*, void**, size_t*);
-
-void build(char*, char*, uint64_t);

@@ -24,7 +24,7 @@ void xz_c_run(char *base, size_t blen, days *ds, unsigned dsl) {
 	lz2opt.nice_len = 273;
 	lz2opt.mf = LZMA_MF_BT4;
 	lz2opt.depth = 512;
-	for (i = 0; i < dsl; i++) {
+	for (i = 0; i < dsl && !need_exit; i++) {
 		qsort(ds[i].secs, ds[i].sl, sizeof(uint64_t), u64t_cmp);
 		memset(&ls, 0, sizeof(lzma_stream));
 		if (LZMA_OK != lzma_stream_encoder(&ls, filters, LZMA_CHECK_NONE))
@@ -33,7 +33,7 @@ void xz_c_run(char *base, size_t blen, days *ds, unsigned dsl) {
 		ls.avail_out = outbl;
 		sprintf(base + blen, "%012" PFI64 "X", ds[i].day);
 		outfile = fopen(base, "wb");
-		for (j = 0; j < ds[i].sl; j++) {
+		for (j = 0; j < ds[i].sl && !need_exit; j++) {
 			sprintf(base + blen, "%016" PFI64 "X", ds[i].secs[j]);
 			memcpy(hdr, ds[i].secs + j, 8);
 			inf1 = fopen(base, "rb"); fseek(inf1, -4, SEEK_END);
@@ -42,7 +42,7 @@ void xz_c_run(char *base, size_t blen, days *ds, unsigned dsl) {
 			gzbuffer(infile, 1024 * 1024 * 16);
 			ls.next_in = hdr;
 			ls.avail_in = 12;
-			while (1) {
+			while (!need_exit) {
 				if (!ls.avail_in) {
 					ls.next_in = inb;
 					ls.avail_in = gzread(infile, inb, inbl);
@@ -56,10 +56,9 @@ void xz_c_run(char *base, size_t blen, days *ds, unsigned dsl) {
 				}
 			}
 			gzclose(infile);
-			remove(base);
 		}
 		ret = LZMA_OK;
-		while (LZMA_STREAM_END != ret) {
+		while (LZMA_STREAM_END != ret && !need_exit) {
 			ret = lzma_code(&ls, LZMA_FINISH);
 			if (LZMA_STREAM_END != ret && LZMA_OK != ret) break;
 			if (!ls.avail_out) {
@@ -71,6 +70,13 @@ void xz_c_run(char *base, size_t blen, days *ds, unsigned dsl) {
 		fwrite(outb, 1, outbl - ls.avail_out, outfile);
 		fclose(outfile);
 		lzma_end(&ls);
+		if (!need_exit) for (j = 0; j < ds[i].sl; j++) {
+			sprintf(base + blen, "%016" PFI64 "X", ds[i].secs[j]);
+			remove(base);
+		} else {
+			sprintf(base + blen, "%012" PFI64 "X", ds[i].day);
+			remove(base);
+		}
 	}
 	free(inb);
 	free(outb);

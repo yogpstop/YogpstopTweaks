@@ -4,6 +4,7 @@
 #include <math.h>
 #include <sys/stat.h>
 #include "main.h"
+#include "service.h"
 #include "bsdiff/bsdiff.h"
 typedef struct {
 	char *fn;

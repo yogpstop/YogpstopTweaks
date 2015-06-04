@@ -15,15 +15,18 @@ void loop(char *dir, char *sz, char *coc, char *cop, char **filter) {
 	int GENCMP;
 	while (prv || cur) {
 		while (cmp < 0 && prv) {
+			if (need_exit) break;
 			comp_do(op, prv->type, prv->name, prv->ts, prv->len, prv->out);
 			if (!dec_do(prv)) { dec_final(prv); prv = NULL; cmp = 1; break; }
 			GENCMP;
 		}
 		while (cmp > 0 && cur) {
+			if (need_exit) break;
 			comp_do(oc, cur->type, cur->name, cur->ts, cur->len, cur->out);
 			if (!raw_do(cur)) { raw_final(cur); cur = NULL; cmp = -1; break; }
 			GENCMP;
 		}
+		if (need_exit) break;
 		if (cmp || !prv || !cur) continue;
 		comp_do(oc, cur->type, cur->name, cur->ts, cur->len, cur->out);
 		if (prv->type != cur->type ||

@@ -3,16 +3,17 @@
 #include <time.h>
 #include <search.h>
 #include <unistd.h>
-#if _WIN32
+#ifdef _WIN32
 #include <winsock2.h>
 #endif
 #include "main.h"
+#include "service.h"
 
 static int dcmp(const void *m1, const void *m2) {
 	return ((days*)m1)->day - ((days*)m2)->day;
 }
 
-static void run_wrap(char *target_dir, char *dest_dir, char **filter) {
+void backup1(char *target_dir, char *dest_dir, char **filter) {
 	size_t len = strlen(dest_dir);
 	char *inal = malloc(len + DIR_APP_LEN + 1);
 	memcpy(inal, dest_dir, len);
@@ -58,10 +59,13 @@ next_read:
 	char *tmp = malloc(len + 6);
 	memcpy(tmp, inal, len);
 	strcpy(tmp + len, "Ztemp");
+	if (need_exit) goto b1end;
 	loop(target_dir, old[len] ? old : NULL, new, tmp, filter);
+	if (need_exit) { remove(tmp); remove(new); goto b1end; }
 	if (old[len]) { remove(old); rename(tmp, old); }
 	else remove(tmp);
 	xz_c_run(new, len, cup, cupl);
+b1end:
 	while (cupl--) free(cup[cupl].secs);
 	free(cup);
 	free(tmp);
@@ -76,11 +80,11 @@ static void rcon_wrap(char *ip, char *port, char *pw,
 	if (!mc_rcon_login(sock, &iid, pw)) { close(sock); return; }
 	char *r = mc_rcon_com(sock, &iid, "save-off"); if (r) mc_rcon_free(r);
 	r = mc_rcon_com(sock, &iid, "save-all flush"); if (r) mc_rcon_free(r);
-	run_wrap(target, dest, filter);
+	backup1(target, dest, filter);
 	r = mc_rcon_com(sock, &iid, "save-on"); if(r) mc_rcon_free(r);
 	close(sock);
 }
-static void config_wrap(char *cfile) {
+void backup(char *cfile) {
 	FILE *f = fopen(cfile, "rb"); if (!f) return;
 	fseek(f, 0, SEEK_END); long l = ftell(f); rewind(f);
 	char *buf = malloc(l + 1); if(!buf) { fclose(f); return; }
@@ -90,7 +94,7 @@ static void config_wrap(char *cfile) {
 	char *tp1, *tp2, *rp1, *rp2;
 	char **arg = NULL;
 	rp1 = strtok_r(buf, "\r\n", &tp1);
-	while(rp1) {
+	while(rp1 && !need_exit) {
 		l = 0;
 		rp2 = strtok_r(rp1, ";", &tp2);
 		while (rp2) {
@@ -107,25 +111,4 @@ static void config_wrap(char *cfile) {
 	}
 	free(arg);
 	free(buf);
-}
-int main(int argc, char **argv) {
-	if (argc == 4) {
-		char *inval;
-		uint64_t ts = strtoull(argv[3], &inval, 16);
-		if (*inval) return 2;
-		build(argv[1], argv[2], ts);
-		return 0;
-	}
-	if (argc != 2) return 1;
-#if _WIN32
-	WSADATA wsad; WSAStartup(WINSOCK_VERSION, &wsad);
-#endif
-	while (1) {
-		config_wrap(argv[1]);
-		sleep(60 * 20);
-	}
-#if _WIN32
-	WSACleanup();
-#endif
-	return 0;
 }
