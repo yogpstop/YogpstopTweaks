@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "main.h"
+#include "service.h"
 #include "bsdiff/bsdiff.h"
 
 #define GENCMP cmp = !prv ? 1 : !cur ? -1 : strcmp(prv->name, cur->name); \
@@ -8,9 +9,9 @@
 		cmp = DT2CP(prv->type) - DT2CP(cur->type)
 
 void loop(char *dir, char *sz, char *coc, char *cop, char **filter) {
-	st_compress oc = comp_init(coc, 1), op = comp_init(cop, 0);
+	st_compress oc = comp_init(coc, cop != NULL), op = NULL;
 	st_decomp prv = NULL;
-	if (sz) { prv = dec_init(sz, 0); dec_do(prv); }
+	if (sz) { prv = dec_init(sz, 0); dec_do(prv); op = comp_init(cop, 0); }
 	st_raw cur = raw_init(dir, filter); raw_do(cur);
 	int GENCMP;
 	while (prv || cur) {
@@ -51,6 +52,6 @@ void loop(char *dir, char *sz, char *coc, char *cop, char **filter) {
 	}
 	if (prv) dec_final(prv);
 	if (cur) raw_final(cur);
-	comp_final(op);
+	if (op) comp_final(op);
 	comp_final(oc);
 }

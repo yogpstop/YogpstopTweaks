@@ -26,13 +26,15 @@ int main(int argc, char **argv) {
 		}
 	} else if (argc == 2 && !strcmp(argv[1], "stop")) {
 		//TODO pid kill
-	} else if (argc == 5 && !strcmp(argv[1], "restore")) {
+	} else if (argc == 5 && !strcmp(argv[1], "rollback")) {
 		char *inval;
 		uint64_t ts = strtoull(argv[4], &inval, 16);
 		if (*inval) return 2;
 		build(argv[2], argv[3], ts);
+	} else if (argc == 4 && !strcmp(argv[1], "restore")) {
+		build_main(argv[2], 0, argv[3]);
 	} else if (argc >= 4 && !strcmp(argv[1], "backup")) {
-		backup1(argv[2], argv[3], argv + 4);
+		loop(argv[2], NULL, argv[3], NULL, argv + 4);
 	}
 	return 0;
 }

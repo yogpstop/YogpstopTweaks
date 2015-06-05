@@ -13,7 +13,7 @@ static int dcmp(const void *m1, const void *m2) {
 	return ((days*)m1)->day - ((days*)m2)->day;
 }
 
-void backup1(char *target_dir, char *dest_dir, char **filter) {
+static void backup1(char *target_dir, char *dest_dir, char **filter) {
 	size_t len = strlen(dest_dir);
 	char *inal = malloc(len + DIR_APP_LEN + 1);
 	memcpy(inal, dest_dir, len);
@@ -63,7 +63,6 @@ next_read:
 	loop(target_dir, old[len] ? old : NULL, new, tmp, filter);
 	if (need_exit) { remove(tmp); remove(new); goto b1end; }
 	if (old[len]) { remove(old); rename(tmp, old); }
-	else remove(tmp);
 	xz_c_run(new, len, cup, cupl);
 b1end:
 	while (cupl--) free(cup[cupl].secs);
@@ -77,12 +76,12 @@ static void rcon_wrap(char *ip, char *port, char *pw,
 		char *target, char *dest, char **filter) {
 	int sock = create_socket(ip, port);
 	int32_t iid = 0;
-	if (!mc_rcon_login(sock, &iid, pw)) { close(sock); return; }
+	if (!mc_rcon_login(sock, &iid, pw)) { CLOSESOCKET(sock); return; }
 	char *r = mc_rcon_com(sock, &iid, "save-off"); if (r) mc_rcon_free(r);
 	r = mc_rcon_com(sock, &iid, "save-all flush"); if (r) mc_rcon_free(r);
 	backup1(target, dest, filter);
 	r = mc_rcon_com(sock, &iid, "save-on"); if(r) mc_rcon_free(r);
-	close(sock);
+	CLOSESOCKET(sock);
 }
 void backup(char *cfile) {
 	FILE *f = fopen(cfile, "rb"); if (!f) return;

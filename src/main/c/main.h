@@ -30,6 +30,7 @@ extern volatile int need_exit;
 #define gv_isdir(r) (r->dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
 #define PFI64 "I64"
 #define PFZ "I"
+#define CLOSESOCKET closesocket
 #else
 #include <dirent.h>
 #define MKDIR_PP(fn) mkdir(fn, 0755)
@@ -48,6 +49,7 @@ extern volatile int need_exit;
 #define PFI64 "ll"
 #endif
 #define PFZ "z"
+#define CLOSESOCKET close
 #endif
 
 #define cast_struct(str, obj, mem) ((str*)(((void*)obj) - offsetof(str, mem)))
@@ -110,8 +112,6 @@ typedef struct {
 st_raw raw_init(char*, char**);
 int raw_do(st_raw);
 void raw_final(st_raw);
-
-void loop(char*, char*, char*, char*, char**);
 
 typedef struct {
 	uint64_t day;

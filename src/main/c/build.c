@@ -87,7 +87,7 @@ static mcr *load_mcr(const char *base, const char *inn) {
 	free(in);
 	return out;
 }
-static void build_main(void *srcn, int xz, char *dstn) {
+void build_main(void *srcn, int xz, char *dstn) {
 	st_decomp src = dec_init(srcn, xz);
 	mcr *pmcr = NULL;
 	size_t rlen; ssize_t tlen; void *raw, *tmp; char *fn; int same;

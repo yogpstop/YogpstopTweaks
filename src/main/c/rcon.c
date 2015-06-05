@@ -12,6 +12,7 @@
 #include <arpa/inet.h>
 #include <netdb.h>
 #endif
+#include "main.h"
 
 #define mc_rcon_free(p) free(((void*)(p)) - 12)
 
@@ -25,7 +26,7 @@ int create_socket(char *host, char *prot) {
 		sock = socket(aip->ai_family, aip->ai_socktype, aip->ai_protocol);
 		if (-1 == sock) continue;
 		if (-1 != connect(sock, aip->ai_addr, aip->ai_addrlen)) break;
-		close(sock); sock = -1;
+		CLOSESOCKET(sock); sock = -1;
 	}
 	freeaddrinfo(ais);
 	return sock;
