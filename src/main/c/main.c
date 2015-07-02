@@ -74,14 +74,21 @@ b1end:
 }
 static void rcon_wrap(char *ip, char *port, char *pw,
 		char *target, char *dest, char **filter) {
-	int sock = create_socket(ip, port);
-	int32_t iid = 0;
-	if (!mc_rcon_login(sock, &iid, pw)) { CLOSESOCKET(sock); return; }
-	char *r = mc_rcon_com(sock, &iid, "save-off"); if (r) mc_rcon_free(r);
-	r = mc_rcon_com(sock, &iid, "save-all flush"); if (r) mc_rcon_free(r);
+	int sock = create_socket(ip, port); char *r; int32_t iid = 0;
+	if (sock != -1) { if (!mc_rcon_login(sock, &iid, pw))
+	                      { CLOSESOCKET(sock); sock = -1; } }
+	if (sock != -1) {
+		r = mc_rcon_com(sock, &iid, "save-off");
+		if (r) mc_rcon_free(r);
+		r = mc_rcon_com(sock, &iid, "save-all flush");
+		if (r) mc_rcon_free(r);
+	}
 	backup1(target, dest, filter);
-	r = mc_rcon_com(sock, &iid, "save-on"); if(r) mc_rcon_free(r);
-	CLOSESOCKET(sock);
+	if (sock != -1) {
+		r = mc_rcon_com(sock, &iid, "save-on");
+		if(r) mc_rcon_free(r);
+		CLOSESOCKET(sock);
+	}
 }
 void backup(char *cfile) {
 	FILE *f = fopen(cfile, "rb"); if (!f) return;

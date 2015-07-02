@@ -12,20 +12,36 @@ static SERVICE_STATUS g_srv_stat = {
 	SERVICE_WIN32_OWN_PROCESS, SERVICE_START_PENDING,
 	SERVICE_ACCEPT_STOP | SERVICE_ACCEPT_SHUTDOWN, NO_ERROR, NO_ERROR, 0, 0};
 static SERVICE_STATUS_HANDLE g_srv_stat_h;
+static DWORD main_thread_id;
 static void WINAPI SvcHandler(DWORD cc) {
 	switch (cc) {
 	case SERVICE_CONTROL_SHUTDOWN:
 	case SERVICE_CONTROL_STOP:
 		need_exit = 1;
 		g_srv_stat.dwCurrentState = SERVICE_STOP_PENDING;
+		g_srv_stat.dwCheckPoint = 0;
+		g_srv_stat.dwWaitHint = 3000;
+		HANDLE thread = OpenThread(SYNCHRONIZE, FALSE, main_thread_id);
+		if (!thread) break;
+		do {
+			g_srv_stat.dwCheckPoint++;
+			SetServiceStatus(g_srv_stat_h, &g_srv_stat);
+		} while (WaitForSingleObject(thread, 2000) != WAIT_OBJECT_0);
+		CloseHandle(thread);
+		g_srv_stat.dwCurrentState = SERVICE_STOPPED;
+		g_srv_stat.dwCheckPoint = 0;
+		g_srv_stat.dwWaitHint = 0;
 		break;
 	}
 	SetServiceStatus(g_srv_stat_h, &g_srv_stat);
 }
 static char *cfile;
 static void WINAPI SvcMain(DWORD argc, char **argv) {
+	main_thread_id = GetCurrentThreadId();
 	g_srv_stat_h = RegisterServiceCtrlHandlerA(SVCNAME, SvcHandler);
 	g_srv_stat.dwCurrentState = SERVICE_RUNNING;
+	g_srv_stat.dwCheckPoint = 0;
+	g_srv_stat.dwWaitHint = 0;
 	SetServiceStatus(g_srv_stat_h, &g_srv_stat);
 	WSADATA wsad; WSAStartup(WINSOCK_VERSION, &wsad);
 	time_t next = time(NULL);
@@ -35,8 +51,6 @@ static void WINAPI SvcMain(DWORD argc, char **argv) {
 		while (time(NULL) < next && !need_exit) sleep(1);
 	}
 	WSACleanup();
-	g_srv_stat.dwCurrentState = SERVICE_STOPPED;
-	SetServiceStatus(g_srv_stat_h, &g_srv_stat);
 }
 static void SvcInstall(char *fn) {
 	SC_HANDLE scm = OpenSCManager(NULL, NULL, SC_MANAGER_CREATE_SERVICE);
