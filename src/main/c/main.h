@@ -133,8 +133,7 @@ uint64_t xz_d_next(st_xz_d);
 int xz_d_read(st_xz_d, void*, unsigned);
 
 #define mc_rcon_free(p) free(((void*)(p)) - 12)
-int create_socket(char*, char*);
-int mc_rcon_login(int, int32_t*, const char*);
+int create_socket(char*, int32_t*);
 char *mc_rcon_com(int, int32_t*, const char*);
 
 int file_read(const char*, void**, size_t*);

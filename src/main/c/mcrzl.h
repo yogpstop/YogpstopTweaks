@@ -15,11 +15,12 @@
 void *MCRZL_FUNC(void *src, const size_t srcl, size_t *dstl) {
 	*dstl = 1024 * 1024; //1MB
 	void *dst = malloc(*dstl);
-	z_stream zs = {};
-	zs.next_in = src;
-	zs.avail_in = srcl;
-	zs.next_out = dst;
-	zs.avail_out = *dstl;
+	z_stream zs = {
+		.next_in = src,
+		.avail_in = srcl,
+		.next_out = dst,
+		.avail_out = *dstl
+	};
 #if MCRZL_INF
 	inflateInit(&zs);
 #else

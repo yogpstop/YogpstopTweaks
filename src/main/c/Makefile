@@ -1,5 +1,5 @@
 CC:=gcc
-CFLAGS:=-Wall -Werror -O3 -march=native -pipe -flto
+CFLAGS:=-Wall -Wextra -Werror -O3 -march=native -pipe -flto
 LD:=gcc
 LDFLAGS:=-s
 

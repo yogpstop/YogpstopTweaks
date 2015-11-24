@@ -10,20 +10,21 @@ static int u64t_cmp(const void *a1, const void *a2) {
 }
 
 void xz_c_run(char *base, size_t blen, days *ds, unsigned dsl) {
-	int i, j; FILE *inf1, *outfile; gzFile infile; lzma_stream ls;
+	unsigned i; int j; FILE *inf1, *outfile; gzFile infile; lzma_stream ls;
 	const size_t outbl = 1024 * 1024 * 16; void *outb = malloc(outbl);
 	const size_t inbl = 1024 * 1024 * 16; void *inb = malloc(inbl);
-	uint8_t hdr[12]; lzma_ret ret; lzma_options_lzma lz2opt = {};
+	uint8_t hdr[12]; lzma_ret ret; lzma_options_lzma lz2opt = {
+		.dict_size = 1024 * 1024 * 128,
+		.lc = LZMA_LC_DEFAULT,
+		.lp = LZMA_LP_DEFAULT,
+		.pb = LZMA_PB_DEFAULT,
+		.mode = LZMA_MODE_NORMAL,
+		.nice_len = 273,
+		.mf = LZMA_MF_BT4,
+		.depth = 512
+	};
 	lzma_filter filters[] = {{LZMA_FILTER_LZMA2, &lz2opt},
 			{LZMA_VLI_UNKNOWN,NULL}};
-	lz2opt.dict_size = 1024 * 1024 * 128;
-	lz2opt.lc = LZMA_LC_DEFAULT;
-	lz2opt.lp = LZMA_LP_DEFAULT;
-	lz2opt.pb = LZMA_PB_DEFAULT;
-	lz2opt.mode = LZMA_MODE_NORMAL;
-	lz2opt.nice_len = 273;
-	lz2opt.mf = LZMA_MF_BT4;
-	lz2opt.depth = 512;
 	for (i = 0; i < dsl && !need_exit; i++) {
 		qsort(ds[i].secs, ds[i].sl, sizeof(uint64_t), u64t_cmp);
 		memset(&ls, 0, sizeof(lzma_stream));
@@ -37,7 +38,7 @@ void xz_c_run(char *base, size_t blen, days *ds, unsigned dsl) {
 			sprintf(base + blen, "%016" PFI64 "X", ds[i].secs[j]);
 			memcpy(hdr, ds[i].secs + j, 8);
 			inf1 = fopen(base, "rb"); fseek(inf1, -4, SEEK_END);
-			if (fread(hdr + 8, 1, 4, inf1)); fclose(inf1);
+			if (fread(hdr + 8, 1, 4, inf1)) {} fclose(inf1);
 			infile = gzopen(base, "rb");
 			gzbuffer(infile, 1024 * 1024 * 16);
 			ls.next_in = hdr;

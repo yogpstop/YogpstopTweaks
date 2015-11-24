@@ -9,13 +9,15 @@
 volatile int need_exit = 0;
 void sighdl(int sig) {
 	need_exit = 1;
+	(void) sig; // XXX
 }
 int main(int argc, char **argv) {
 	if (argc == 3 && !strcmp(argv[1], "start")) {//TODO argc == 2 (read conf)
 		if (!daemon(0, 0)) {
 			//TODO pid file
-			struct sigaction sact = {};
-			sact.sa_handler = sighdl;
+			struct sigaction sact = {
+				.sa_handler = sighdl
+			};
 			sigaction(SIGTERM, &sact, NULL);
 			time_t next = time(NULL);
 			while (!need_exit) {

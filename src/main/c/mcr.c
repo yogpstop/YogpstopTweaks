@@ -32,4 +32,5 @@ int get_mcr(void *in, const size_t ilen, int n,
 		*out = NULL; *olen = 0; }//FIXME extract gzip
 	dbgprintf("GET_MCR\n");
 	return n;
+	(void) ilen; // XXX
 }

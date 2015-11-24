@@ -72,11 +72,9 @@ b1end:
 	free(new);
 	free(inal);
 }
-static void rcon_wrap(char *ip, char *port, char *pw,
-		char *target, char *dest, char **filter) {
-	int sock = create_socket(ip, port); char *r; int32_t iid = 0;
-	if (sock != -1) { if (!mc_rcon_login(sock, &iid, pw))
-	                      { CLOSESOCKET(sock); sock = -1; } }
+static void rcon_wrap(char *target, char *dest, char **filter) {
+	int32_t iid = 0; char *r;
+	int sock = create_socket(target, &iid);
 	if (sock != -1) {
 		r = mc_rcon_com(sock, &iid, "save-off");
 		if (r) mc_rcon_free(r);
@@ -92,7 +90,7 @@ static void rcon_wrap(char *ip, char *port, char *pw,
 }
 void backup(char *cfile) {
 	FILE *f = fopen(cfile, "rb"); if (!f) return;
-	fseek(f, 0, SEEK_END); long l = ftell(f); rewind(f);
+	fseek(f, 0, SEEK_END); size_t l = ftell(f); rewind(f);
 	char *buf = malloc(l + 1); if(!buf) { fclose(f); return; }
 	if (l != fread(buf, 1, l, f)) { free(buf); fclose(f); return; }
 	fclose(f);
@@ -108,10 +106,10 @@ void backup(char *cfile) {
 			arg[l++] = rp2;
 			rp2 = strtok_r(NULL, ";", &tp2);
 		}
-		if (l > 5) {
+		if (l > 2) {
 			arg = realloc(arg, (l + 1) * sizeof(char*));
 			arg[l] = NULL;
-			rcon_wrap(arg[0], arg[1], arg[2], arg[3], arg[4], arg + 5);
+			rcon_wrap(arg[0], arg[1], arg + 2);
 		}
 		rp1 = strtok_r(NULL, "\r\n", &tp1);
 	}

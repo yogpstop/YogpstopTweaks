@@ -8,6 +8,10 @@
 		if (!cmp && prv->type & DT_MCR && cur->type & DT_MCR) \
 		cmp = DT2CP(prv->type) - DT2CP(cur->type)
 
+// latest backup (coc, oc, cur) is always full backup
+// cop is NOT null when incremental backup (INCLUDE FIRST FULL BACKUP)
+// cop is ALWAYS null when standalone backup (executed directly by commandline)
+// We should use fast compressing when incremental backup
 void loop(char *dir, char *sz, char *coc, char *cop, char **filter) {
 	st_compress oc = comp_init(coc, cop != NULL), op = NULL;
 	st_decomp prv = NULL;
